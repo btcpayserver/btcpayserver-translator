@@ -43,7 +43,10 @@ class Program
             CreateTranslateCommand(serviceProvider),
             CreateListLanguagesCommand(),
             CreateBatchCommand(serviceProvider),
-            CreateStatusCommand(serviceProvider)
+            CreateStatusCommand(serviceProvider),
+            CreateCheckoutTranslateCommand(serviceProvider),
+            CreateCheckoutBatchCommand(serviceProvider),
+            CreateCheckoutStatusCommand(serviceProvider)
         };
 
         return await rootCommand.InvokeAsync(args);
@@ -207,6 +210,152 @@ class Program
             foreach (var lang in SupportedLanguages.GetAllLanguages().OrderBy(l => l.Name))
             {
                 var filePath = Path.Combine(outputDir, $"{lang.Name.ToLower()}.json");
+                var exists = File.Exists(filePath);
+                var count = 0;
+
+                if (exists)
+                {
+                    try
+                    {
+                        var translations = await fileWriter.LoadExistingBackendTranslationsAsync(filePath);
+                        count = translations.Count;
+                    }
+                    catch
+                    {
+                        // Ignore errors for status check
+                    }
+                }
+
+                var existsText = exists ? "✓" : "✗";
+                Console.WriteLine($"{lang.Name,-15} {lang.Code,-10} {existsText,-12} {count,-12}");
+            }
+        });
+
+        return command;
+    }
+
+    private static Command CreateCheckoutTranslateCommand(ServiceProvider serviceProvider)
+    {
+        var languageOption = new Option<string>(
+            "--language",
+            "Language code to translate to (e.g., 'hi', 'es', 'fr')")
+        {
+            IsRequired = true
+        };
+
+        var forceOption = new Option<bool>(
+            "--force",
+            "Force retranslation of all strings, even if translations already exist");
+
+        var command = new Command("checkout-translate", "Translate BTCPay Server checkout to a specific language")
+        {
+            languageOption,
+            forceOption
+        };
+
+        command.SetHandler(async (language, force) =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            logger.LogInformation("Starting checkout translation for language: {Language}", language);
+            
+            var success = await orchestrator.TranslateCheckoutToLanguageAsync(language, force);
+            
+            if (success)
+            {
+                logger.LogInformation("Checkout translation completed successfully!");
+                Environment.Exit(0);
+            }
+            else
+            {
+                logger.LogError("Checkout translation failed!");
+                Environment.Exit(1);
+            }
+        }, languageOption, forceOption);
+
+        return command;
+    }
+
+    private static Command CreateCheckoutBatchCommand(ServiceProvider serviceProvider)
+    {
+        var languagesOption = new Option<string[]>(
+            "--languages",
+            "Multiple language codes to translate to (e.g., 'hi es fr')")
+        {
+            IsRequired = true,
+            AllowMultipleArgumentsPerToken = true
+        };
+
+        var forceOption = new Option<bool>(
+            "--force",
+            "Force retranslation of all strings, even if translations already exist");
+
+        var continueOnErrorOption = new Option<bool>(
+            "--continue-on-error",
+            "Continue processing other languages if one fails")
+        {
+            IsRequired = false
+        };
+
+        var command = new Command("checkout-batch", "Translate BTCPay Server checkout to multiple languages")
+        {
+            languagesOption,
+            forceOption,
+            continueOnErrorOption
+        };
+
+        command.SetHandler(async (languages, force, continueOnError) =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            logger.LogInformation("Starting batch checkout translation for languages: {Languages}", 
+                string.Join(", ", languages));
+            
+            var results = await orchestrator.TranslateCheckoutToMultipleLanguagesAsync(languages, force, continueOnError);
+            
+            var successCount = results.Values.Count(success => success);
+            var totalCount = results.Count;
+            
+            logger.LogInformation("Batch checkout translation completed: {SuccessCount}/{TotalCount} successful", 
+                successCount, totalCount);
+                
+            foreach (var result in results)
+            {
+                var status = result.Value ? "✓" : "✗";
+                logger.LogInformation("  {Status} {Language}", status, result.Key);
+            }
+            
+            Environment.Exit(successCount == totalCount ? 0 : 1);
+        }, languagesOption, forceOption, continueOnErrorOption);
+
+        return command;
+    }
+
+    private static Command CreateCheckoutStatusCommand(ServiceProvider serviceProvider)
+    {
+        var command = new Command("checkout-status", "Show checkout translation status for all languages");
+
+        command.SetHandler(async () =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            var fileWriter = scope.ServiceProvider.GetRequiredService<FileWriter>();
+            
+            var outputDir = configuration["CheckoutTranslation:OutputDirectory"] ?? 
+                           "checkoutTranslations";
+
+            Console.WriteLine("Checkout Translation Status:");
+            Console.WriteLine("============================");
+            Console.WriteLine($"{"Language",-15} {"Code",-10} {"File Exists",-12} {"Translations",-12}");
+            Console.WriteLine(new string('-', 55));
+
+            foreach (var lang in SupportedLanguages.GetAllLanguages().OrderBy(l => l.Name))
+            {
+                var filePath = Path.Combine(outputDir, $"{lang.Code}.json");
                 var exists = File.Exists(filePath);
                 var count = 0;
 

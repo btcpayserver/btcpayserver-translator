@@ -236,4 +236,113 @@ public class TranslationExtractor
         }
         return url;
     }
+
+    public async Task<Dictionary<string, string>> ExtractFromCheckoutJsonAsync(string filePathOrUrl)
+    {
+        try
+        {
+            string content;
+            string sourceDescription;
+
+            if (IsUrl(filePathOrUrl))
+            {
+                content = await DownloadCheckoutFileContentAsync(filePathOrUrl);
+                sourceDescription = $"URL: {filePathOrUrl}";
+            }
+            else
+            {
+                if (!File.Exists(filePathOrUrl))
+                {
+                    throw new FileNotFoundException($"Checkout translation file not found: {filePathOrUrl}");
+                }
+                content = await File.ReadAllTextAsync(filePathOrUrl);
+                sourceDescription = $"File: {filePathOrUrl}";
+            }
+            
+            // Parse the JSON content
+            var translations = new Dictionary<string, string>();
+            var jsonObject = JObject.Parse(content);
+
+            foreach (var property in jsonObject.Properties())
+            {
+                // Skip metadata fields
+                if (property.Name is "NOTICE_WARN" or "code" or "currentLanguage")
+                    continue;
+
+                var key = property.Name;
+                var value = property.Value?.ToString() ?? "";
+                
+                // Include all translation keys
+                if (!string.IsNullOrEmpty(value))
+                {
+                    translations[key] = value;
+                }
+            }
+
+            _logger.LogInformation("Extracted {Count} checkout translations from {Source}", translations.Count, sourceDescription);
+            return translations;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error extracting checkout translations from {Source}", filePathOrUrl);
+            throw;
+        }
+    }
+
+    private async Task<string> DownloadCheckoutFileContentAsync(string url)
+    {
+        try
+        {
+            // Check cache first
+            var cacheKey = GetCheckoutCacheKey(url);
+            var cachePath = Path.Combine(_cacheDirectory, cacheKey);
+            
+            if (File.Exists(cachePath))
+            {
+                var cacheAge = DateTime.Now - File.GetLastWriteTime(cachePath);
+                // Use cache if it's less than 1 hour old
+                if (cacheAge.TotalHours < 1)
+                {
+                    _logger.LogInformation("Using cached checkout file for {Url}", url);
+                    return await File.ReadAllTextAsync(cachePath);
+                }
+            }
+
+            _logger.LogInformation("Downloading checkout file from {Url}", url);
+            
+            // Convert GitHub blob URL to raw URL if needed
+            var downloadUrl = ConvertToRawUrl(url);
+            
+            var response = await _httpClient.GetAsync(downloadUrl);
+            response.EnsureSuccessStatusCode();
+            
+            var content = await response.Content.ReadAsStringAsync();
+            
+            // Cache the content
+            await File.WriteAllTextAsync(cachePath, content);
+            _logger.LogInformation("Cached downloaded checkout content to {CachePath}", cachePath);
+            
+            return content;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading checkout file from {Url}", url);
+            throw;
+        }
+    }
+
+    private string GetCheckoutCacheKey(string url)
+    {
+        // Create a safe filename from the URL
+        var uri = new Uri(url);
+        var filename = Path.GetFileName(uri.LocalPath);
+        if (string.IsNullOrEmpty(filename))
+        {
+            filename = "checkout_en.json";
+        }
+        
+        // Add a hash of the URL to make it unique
+        var urlHash = url.GetHashCode().ToString("X");
+        return $"{Path.GetFileNameWithoutExtension(filename)}_{urlHash}.json";
+    }
 }

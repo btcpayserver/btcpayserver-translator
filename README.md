@@ -5,6 +5,7 @@ A command-line tool to translate BTCPay Server's UI text to multiple languages u
 ## Features
 
 - Translates BTCPay Server's default English strings to any supported language
+- Checkout Translations - Dedicated support for translating checkout page strings
 - Uses OpenRouter API with various AI models
 - URL Support: Download translations directly from GitHub URLs
 - Batch processing with configurable concurrency and rate limiting
@@ -47,7 +48,8 @@ OPENROUTER_APP_NAME=https://github.com/btcpayserver/btcpayserver
 dotnet run -- list-languages
 ```
 
-### Translate to a Single Language
+### Translate to a Single Language for BTCPayServer App
+
 ```bash
 # Translate to Hindi
 dotnet run -- translate --language hi
@@ -72,6 +74,38 @@ dotnet run -- batch --languages hi es fr de --force
 ```bash
 dotnet run -- status
 ```
+
+### for Checkout page Translations
+
+The tool now supports dedicated checkout translation commands for translating BTCPay Server's checkout page.
+
+#### Translate Checkout to a Single Language
+```bash
+# Translate checkout to Spanish
+dotnet run -- checkout-translate --language es
+
+# Force retranslation of all checkout strings
+dotnet run -- checkout-translate --language es --force
+```
+
+#### Batch Checkout Translation to Multiple Languages
+```bash
+# Translate checkout to multiple languages
+dotnet run -- checkout-batch --languages hi es fr de
+
+# Continue on error
+dotnet run -- checkout-batch --languages hi es fr de --continue-on-error
+
+# Force retranslation
+dotnet run -- checkout-batch --languages hi es fr de --force
+```
+
+#### Check Checkout Translation Status
+```bash
+dotnet run -- checkout-status
+```
+
+**Checkout translations are stored separately in the `checkoutTranslations/` folder.**
 
 ## Supported Languages
 
@@ -104,6 +138,13 @@ The tool supports 100+ languages including:
     "DelayBetweenRequests": 1000,
     "InputFile": "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs",
     "OutputDirectory": "translations"
+  },
+  "CheckoutTranslation": {
+    "BatchSize": 40,
+    "MaxRetries": 3,
+    "DelayBetweenRequests": 1500,
+    "InputFile": "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/locales/checkout/en.json",
+    "OutputDirectory": "checkoutTranslations"
   }
 }
 ```
@@ -111,24 +152,33 @@ The tool supports 100+ languages including:
 **Input File Configuration:**
 - **URL Support**: You can use either a local file path or a URL to the BTCPayServer translations file
 - **GitHub URLs**: The tool automatically converts GitHub blob URLs to raw URLs for direct content access
-- **Examples**:
+- **Backend Translations**: Default translations from the server backend
   - URL: `https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs`
   - Local: `../BTCPayServer/Services/Translations.Default.cs`
+- **Checkout Translations**: Translations specific to the checkout page
+  - URL: `https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/locales/checkout/en.json`
+  - Local: `../BTCPayServer/wwwroot/locales/checkout/en.json`
 
 ## Output
 
 Translated files are saved to the configured output directory with the following structure:
 ```
-translations/
+translations/          # Backend translations
 ├── hindi.json
 ├── spanish.json
 ├── french.json
+└── ...
+
+checkoutTranslations/  # Checkout translations
+├── hi.json
+├── es.json
+├── fr.json
 └── ...
 ```
 
 Each translation file includes:
 - All translated strings
-- Metadata about the language
+- Metadata about the language (for checkout translations)
 - Progress reports and error logs
 
 ## Help us make it better
