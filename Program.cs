@@ -43,7 +43,8 @@ class Program
             CreateTranslateCommand(serviceProvider),
             CreateListLanguagesCommand(),
             CreateBatchCommand(serviceProvider),
-            CreateStatusCommand(serviceProvider)
+            CreateStatusCommand(serviceProvider),
+            CreateUpdateCommand(serviceProvider)
         };
 
         return await rootCommand.InvokeAsync(args);
@@ -227,6 +228,45 @@ class Program
                 Console.WriteLine($"{lang.Name,-15} {lang.Code,-10} {existsText,-12} {count,-12}");
             }
         });
+
+        return command;
+    }
+
+    private static Command CreateUpdateCommand(ServiceProvider serviceProvider)
+    {
+        var languageOption = new Option<string>(
+            "--language",
+            "Language code to update (e.g., 'hi', 'es', 'fr')")
+        {
+            IsRequired = true
+        };
+
+        var command = new Command("update", "Update an existing translation file with new strings from GitHub")
+        {
+            languageOption
+        };
+
+        command.SetHandler(async (language) =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            logger.LogInformation("Starting update for language: {Language}", language);
+            
+            var success = await orchestrator.UpdateLanguageAsync(language);
+            
+            if (success)
+            {
+                logger.LogInformation("Update completed successfully!");
+                Environment.Exit(0);
+            }
+            else
+            {
+                logger.LogError("Update failed!");
+                Environment.Exit(1);
+            }
+        }, languageOption);
 
         return command;
     }

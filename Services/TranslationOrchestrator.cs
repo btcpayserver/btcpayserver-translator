@@ -181,4 +181,132 @@ public class TranslationOrchestrator
         return results;
     }
 
+    public async Task<bool> UpdateLanguageAsync(string languageCode)
+    {
+        try
+        {
+            var languageInfo = SupportedLanguages.GetLanguageInfo(languageCode);
+            if (languageInfo == null)
+            {
+                _logger.LogError("Unsupported language code: {LanguageCode}", languageCode);
+                return false;
+            }
+
+            _logger.LogInformation("Starting update for {Language} ({NativeName})", 
+                languageInfo.Name, languageInfo.NativeName);
+
+            // Extract source translations from GitHub
+            var inputFile = _configuration["Translation:InputFile"] ?? 
+                           "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs";
+            
+            _logger.LogInformation("Fetching latest translations from GitHub...");
+            var sourceTranslations = await _extractor.ExtractFromDefaultFileAsync(inputFile);
+            _logger.LogInformation("Found {Count} strings in source", sourceTranslations.Count);
+
+            // Determine output path
+            var outputDir = _configuration["Translation:OutputDirectory"] ?? "translations";
+            var outputPath = Path.Combine(outputDir, $"{languageInfo.Name.ToLower()}.json");
+
+            // Load existing translations
+            if (!File.Exists(outputPath))
+            {
+                _logger.LogError("Translation file not found: {OutputPath}. Use 'translate' command to create it first.", outputPath);
+                return false;
+            }
+
+            var existingTranslations = await _fileWriter.LoadExistingBackendTranslationsAsync(outputPath);
+            _logger.LogInformation("Loaded {Count} existing translations", existingTranslations.Count);
+
+            // Find what's new, what's deleted, and what's unchanged
+            var newKeys = sourceTranslations.Keys.Except(existingTranslations.Keys).ToList();
+            var deletedKeys = existingTranslations.Keys.Except(sourceTranslations.Keys).ToList();
+            var unchangedKeys = existingTranslations.Keys.Intersect(sourceTranslations.Keys).ToList();
+
+            _logger.LogInformation("Analysis: {NewCount} new strings, {DeletedCount} deleted strings, {UnchangedCount} unchanged strings",
+                newKeys.Count, deletedKeys.Count, unchangedKeys.Count);
+
+            if (newKeys.Count == 0 && deletedKeys.Count == 0)
+            {
+                _logger.LogInformation("No updates needed. Translation file is up to date.");
+                return true;
+            }
+
+            // Translate only new strings
+            var translationsToProcess = newKeys.ToDictionary(k => k, k => sourceTranslations[k]);
+            
+            if (translationsToProcess.Count > 0)
+            {
+                _logger.LogInformation("Translating {Count} new strings...", translationsToProcess.Count);
+
+                var batchSize = _configuration.GetValue<int>("Translation:BatchSize", 50);
+                var requests = translationsToProcess
+                    .Select(t => new TranslationRequest(t.Key, t.Value, languageInfo.Name))
+                    .ToList();
+
+                var allResults = new List<TranslationResponse>();
+                for (int i = 0; i < requests.Count; i += batchSize)
+                {
+                    var batch = requests.Skip(i).Take(batchSize).ToList();
+                    _logger.LogInformation("Processing batch {CurrentBatch}/{TotalBatches} ({Count} items)", 
+                        (i / batchSize) + 1, (int)Math.Ceiling((double)requests.Count / batchSize), batch.Count);
+
+                    var batchRequest = new BatchTranslationRequest(batch, languageInfo.Name, languageInfo.NativeName);
+                    var batchResponse = await _translationService.TranslateBatchAsync(batchRequest);
+                    allResults.AddRange(batchResponse.Results);
+
+                    if (i + batchSize < requests.Count)
+                    {
+                        var delay = _configuration.GetValue<int>("Translation:DelayBetweenRequests", 1000);
+                        await Task.Delay(delay);
+                    }
+                }
+
+                var newTranslations = allResults
+                    .Where(r => r.Success)
+                    .ToDictionary(r => r.Key, r => r.TranslatedText);
+
+                _logger.LogInformation("Successfully translated {SuccessCount}/{TotalCount} new strings",
+                    newTranslations.Count, translationsToProcess.Count);
+
+                // Merge new translations with existing ones
+                foreach (var newTranslation in newTranslations)
+                {
+                    existingTranslations[newTranslation.Key] = newTranslation.Value;
+                }
+            }
+
+            // Remove deleted keys
+            foreach (var deletedKey in deletedKeys)
+            {
+                existingTranslations.Remove(deletedKey);
+                _logger.LogDebug("Removed deleted key: {Key}", deletedKey);
+            }
+
+            // Rebuild the final dictionary in the same order as source
+            var finalTranslations = new Dictionary<string, string>();
+            foreach (var sourceKey in sourceTranslations.Keys)
+            {
+                if (existingTranslations.ContainsKey(sourceKey))
+                {
+                    finalTranslations[sourceKey] = existingTranslations[sourceKey];
+                }
+            }
+
+            // Write updated translation file
+            await _fileWriter.WriteBackendTranslationFileAsync(
+                outputPath, languageInfo, finalTranslations);
+
+            _logger.LogInformation(
+                "Update completed for {Language}: {TotalCount} total strings ({NewCount} added, {DeletedCount} removed)",
+                languageInfo.Name, finalTranslations.Count, newKeys.Count, deletedKeys.Count);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during update process for language {LanguageCode}", languageCode);
+            return false;
+        }
+    }
+
 }
