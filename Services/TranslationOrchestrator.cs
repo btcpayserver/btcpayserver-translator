@@ -309,4 +309,44 @@ public class TranslationOrchestrator
         }
     }
 
+    public async Task<Dictionary<string, bool>> UpdateMultipleLanguagesAsync(
+        IEnumerable<string> languageCodes,
+        bool continueOnError = true)
+    {
+        var results = new Dictionary<string, bool>();
+
+        foreach (var languageCode in languageCodes)
+        {
+            try
+            {
+                _logger.LogInformation("Starting update for language: {LanguageCode}", languageCode);
+                var success = await UpdateLanguageAsync(languageCode);
+                results[languageCode] = success;
+
+                if (!success && !continueOnError)
+                {
+                    _logger.LogWarning("Update failed for {LanguageCode}, stopping batch process", languageCode);
+                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating language {LanguageCode}", languageCode);
+                results[languageCode] = false;
+
+                if (!continueOnError)
+                {
+                    break;
+                }
+            }
+        }
+
+        var totalLanguages = results.Count;
+        var successfulLanguages = results.Values.Count(success => success);
+        _logger.LogInformation("Batch update completed: {SuccessCount}/{TotalCount} languages successful",
+            successfulLanguages, totalLanguages);
+
+        return results;
+    }
+
 }

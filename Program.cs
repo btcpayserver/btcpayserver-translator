@@ -44,7 +44,8 @@ class Program
             CreateListLanguagesCommand(),
             CreateBatchCommand(serviceProvider),
             CreateStatusCommand(serviceProvider),
-            CreateUpdateCommand(serviceProvider)
+            CreateUpdateCommand(serviceProvider),
+            CreateBatchUpdateCommand(serviceProvider)
         };
 
         return await rootCommand.InvokeAsync(args);
@@ -267,6 +268,58 @@ class Program
                 Environment.Exit(1);
             }
         }, languageOption);
+
+        return command;
+    }
+
+    private static Command CreateBatchUpdateCommand(ServiceProvider serviceProvider)
+    {
+        var languagesOption = new Option<string[]>(
+            "--languages",
+            "Multiple language codes to update (e.g., 'hi es fr')")
+        {
+            IsRequired = true,
+            AllowMultipleArgumentsPerToken = true
+        };
+
+        var continueOnErrorOption = new Option<bool>(
+            "--continue-on-error",
+            "Continue processing other languages if one fails")
+        {
+            IsRequired = false
+        };
+
+        var command = new Command("batch-update", "Update multiple existing translation files with new strings from GitHub")
+        {
+            languagesOption,
+            continueOnErrorOption
+        };
+
+        command.SetHandler(async (languages, continueOnError) =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            logger.LogInformation("Starting batch update for languages: {Languages}", 
+                string.Join(", ", languages));
+            
+            var results = await orchestrator.UpdateMultipleLanguagesAsync(languages, continueOnError);
+            
+            var successCount = results.Values.Count(success => success);
+            var totalCount = results.Count;
+            
+            logger.LogInformation("Batch update completed: {SuccessCount}/{TotalCount} successful", 
+                successCount, totalCount);
+                
+            foreach (var result in results)
+            {
+                var status = result.Value ? "✓" : "✗";
+                logger.LogInformation("  {Status} {Language}", status, result.Key);
+            }
+            
+            Environment.Exit(successCount == totalCount ? 0 : 1);
+        }, languagesOption, continueOnErrorOption);
 
         return command;
     }
