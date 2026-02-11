@@ -37,7 +37,7 @@ public class BaseTranslationService : ITranslationService
                 "anthropic/claude-3.5-sonnet";
 
         // Optimized for speed but still safe
-        _semaphore = new SemaphoreSlim(5); // 5 concurrent requests max
+        _semaphore = new SemaphoreSlim(2); // 2 concurrent requests max to avoid rate limits
 
         _logger.LogInformation("Fast Translation Service initialized - Model: {Model}", _model);
     }
@@ -189,7 +189,7 @@ No explanations, no additional formatting, no comments."
         var startTime = DateTime.UtcNow;
         var results = new List<TranslationResponse>();
         
-        _logger.LogInformation("Starting FAST batch translation of {Count} items to {Language} with 5 concurrent requests", 
+        _logger.LogInformation("Starting FAST batch translation of {Count} items to {Language} with 2 concurrent requests", 
             request.Items.Count, request.TargetLanguage);
 
         // Process in parallel chunks for speed
@@ -225,7 +225,7 @@ No explanations, no additional formatting, no comments."
                 {
                     _semaphore.Release();
                     // Small delay to avoid overwhelming the API
-                    await Task.Delay(100); // Very short delay for speed
+                    await Task.Delay(300); // Increased delay to avoid rate limits
                 }
             });
 

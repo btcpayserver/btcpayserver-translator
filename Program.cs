@@ -45,7 +45,8 @@ class Program
             CreateBatchCommand(serviceProvider),
             CreateStatusCommand(serviceProvider),
             CreateUpdateCommand(serviceProvider),
-            CreateBatchUpdateCommand(serviceProvider)
+            CreateBatchUpdateCommand(serviceProvider),
+            CreateUpdateAllCommand(serviceProvider)
         };
 
         return await rootCommand.InvokeAsync(args);
@@ -320,6 +321,55 @@ class Program
             
             Environment.Exit(successCount == totalCount ? 0 : 1);
         }, languagesOption, continueOnErrorOption);
+
+        return command;
+    }
+
+    private static Command CreateUpdateAllCommand(ServiceProvider serviceProvider)
+    {
+        var continueOnErrorOption = new Option<bool>(
+            "--continue-on-error",
+            "Continue processing other languages if one fails")
+        {
+            IsRequired = false
+        };
+
+        var command = new Command("update-all", "Automatically detect and update all existing translation files with new strings from GitHub")
+        {
+            continueOnErrorOption
+        };
+
+        command.SetHandler(async (continueOnError) =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            logger.LogInformation("Starting update-all: detecting existing translation files...");
+            
+            var results = await orchestrator.UpdateAllLanguagesAsync(continueOnError);
+            
+            if (results.Count == 0)
+            {
+                logger.LogError("No translation files found to update");
+                Environment.Exit(1);
+                return;
+            }
+            
+            var successCount = results.Values.Count(success => success);
+            var totalCount = results.Count;
+            
+            logger.LogInformation("Update-all completed: {SuccessCount}/{TotalCount} successful", 
+                successCount, totalCount);
+                
+            foreach (var result in results)
+            {
+                var status = result.Value ? "✓" : "✗";
+                logger.LogInformation("  {Status} {Language}", status, result.Key);
+            }
+            
+            Environment.Exit(successCount == totalCount ? 0 : 1);
+        }, continueOnErrorOption);
 
         return command;
     }

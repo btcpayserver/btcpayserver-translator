@@ -74,18 +74,43 @@ dotnet run -- status
 ```
 
 ### Update Existing Translation with New Strings
+
+#### Update Single Language
 ```bash
 # Update Hindi translation with latest strings from GitHub
 dotnet run -- update --language hi
 ```
 
-The `update` command:
-- Fetches the latest strings from BTCPayServer's GitHub repository
-- Compares with your local translation file
-- Only translates new strings that were added
+#### Update Multiple Languages
+```bash
+# Update multiple specific languages
+dotnet run -- batch-update --languages hi es fr de
+
+# Continue on error (don't stop if one language fails)
+dotnet run -- batch-update --languages hi es fr de --continue-on-error
+```
+
+#### Update All Existing Languages Automatically
+```bash
+# Automatically detect and update all translation files
+dotnet run -- update-all
+
+# Continue on error
+dotnet run -- update-all --continue-on-error
+```
+
+**How Update Commands Work:**
+- Fetches the latest strings from BTCPayServer's GitHub repository (once for all languages in `update-all`)
+- Compares with your local translation file(s)
+- **Only translates new strings** that were added (e.g., if you have 2000 strings and GitHub has 2015, only 15 new strings are translated)
 - Removes strings that were deleted from the source
 - Preserves all existing translations
 - Maintains the same order as the source file
+
+**When to Use:**
+- `update` - Update a single language
+- `batch-update` - Update specific languages you choose
+- `update-all` - Update all translation files in your translations directory automatically (most convenient!)
 
 This is useful when BTCPayServer adds new features and strings. Instead of retranslating everything, you can just update with the new additions.
 
