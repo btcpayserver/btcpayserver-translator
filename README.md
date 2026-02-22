@@ -114,6 +114,30 @@ dotnet run -- update-all --continue-on-error
 
 This is useful when BTCPayServer adds new features and strings. Instead of retranslating everything, you can just update with the new additions.
 
+## Fetching Translations from a Running BTCPay Server
+
+By default the tool fetches strings by parsing `Translations.Default.cs` from GitHub. However, some strings are registered via Dependency Injection (by plugins, payment methods, etc.) and do not appear in that file.
+
+When BTCPay Server is running in debug/cheat mode, it exposes a `GET /cheat/translations/default-en` endpoint that returns the complete set of all registered English strings. Pass `--btcpay-url` to any command to use it instead:
+
+```bash
+# 1. Start BTCPay Server in debug mode (cheatmode is enabled automatically)
+cd path/to/btcpayserver/BTCPayServer
+dotnet run --launch-profile Bitcoin
+
+# 2. Run any translation command against the live instance
+dotnet run -- update-all --btcpay-url http://localhost:14142
+dotnet run -- translate --language ja --btcpay-url http://localhost:14142
+```
+
+You can also set it permanently in `.env` so you don't have to pass it every time:
+
+```bash
+TRANSLATION_BTCPAY_URL=http://localhost:14142
+```
+
+All commands work without `--btcpay-url` — it is purely optional. The only difference is that without it, the ~100 DI-registered strings are not included.
+
 ## Supported Languages
 
 The tool supports 100+ languages including:
@@ -134,6 +158,7 @@ The tool supports 100+ languages including:
 | `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | OpenRouter API base URL |
 | `OPENROUTER_SITE_NAME` | `BTCPayTranslator` | Site name for analytics |
 | `OPENROUTER_APP_NAME` | `https://github.com/btcpayserver/btcpayserver` | App name for analytics |
+| `TRANSLATION_BTCPAY_URL` | _(empty)_ | BTCPay Server base URL for fetching all strings in debug mode |
 
 ### Application Settings (appsettings.json)
 
@@ -144,7 +169,8 @@ The tool supports 100+ languages including:
     "MaxRetries": 3,
     "DelayBetweenRequests": 1000,
     "InputFile": "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs",
-    "OutputDirectory": "translations"
+    "OutputDirectory": "translations",
+    "BTCPayUrl": ""
   }
 }
 ```
@@ -175,4 +201,3 @@ Each translation file includes:
 ## Help us make it better
 
 All the translations are AI generated and AI can make mistakes sometimes, so if you recognize a string that might need to be edited, share a pull request. 
-

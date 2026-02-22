@@ -34,6 +34,21 @@ public class TranslationOrchestrator
         _logger = logger;
     }
 
+    public async Task<Dictionary<string, string>> GetSourceTranslationsAsync()
+    {
+        var btcpayUrl = _configuration["Translation:BTCPayUrl"];
+        if (!string.IsNullOrWhiteSpace(btcpayUrl))
+        {
+            _logger.LogInformation("BTCPay Server URL configured — fetching translations from {Url}", btcpayUrl);
+            return await _extractor.ExtractFromBTCPayServerAsync(btcpayUrl);
+        }
+
+        var inputFile = _configuration["Translation:InputFile"] ??
+                        "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs";
+        _logger.LogInformation("Fetching translations from file/URL: {Source}", inputFile);
+        return await _extractor.ExtractFromDefaultFileAsync(inputFile);
+    }
+
     public async Task<bool> TranslateToLanguageAsync(string languageCode, bool forceRetranslate = false)
     {
         try
@@ -48,10 +63,7 @@ public class TranslationOrchestrator
             _logger.LogInformation("Starting translation to {Language} ({NativeName})", 
                 languageInfo.Name, languageInfo.NativeName);
 
-            // Extract source translations from Default.cs
-            var inputFile = _configuration["Translation:InputFile"] ?? 
-                           "../BTCPayServer/Services/Translations.Default.cs";
-            var sourceTranslations = await _extractor.ExtractFromDefaultFileAsync(inputFile);
+            var sourceTranslations = await GetSourceTranslationsAsync();
 
             // Determine output paths
             var outputDir = _configuration["Translation:OutputDirectory"] ?? 
@@ -195,12 +207,7 @@ public class TranslationOrchestrator
             _logger.LogInformation("Starting update for {Language} ({NativeName})", 
                 languageInfo.Name, languageInfo.NativeName);
 
-            // Extract source translations from GitHub
-            var inputFile = _configuration["Translation:InputFile"] ?? 
-                           "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs";
-            
-            _logger.LogInformation("Fetching latest translations from GitHub...");
-            var sourceTranslations = await _extractor.ExtractFromDefaultFileAsync(inputFile);
+            var sourceTranslations = await GetSourceTranslationsAsync();
             _logger.LogInformation("Found {Count} strings in source", sourceTranslations.Count);
 
             // Determine output path
@@ -398,13 +405,9 @@ public class TranslationOrchestrator
             }
 
             _logger.LogInformation("Starting update for {Count} languages", languageCodes.Count);
-            
-            // OPTIMIZATION: Fetch GitHub source once for all languages
-            var inputFile = _configuration["Translation:InputFile"] ?? 
-                           "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs";
-            
-            _logger.LogInformation("Fetching latest translations from GitHub (once for all languages)...");
-            var sourceTranslations = await _extractor.ExtractFromDefaultFileAsync(inputFile);
+
+            // Fetch source once for all languages (either from BTCPay Server or GitHub)
+            var sourceTranslations = await GetSourceTranslationsAsync();
             _logger.LogInformation("Found {Count} strings in source", sourceTranslations.Count);
             
             return await UpdateMultipleLanguagesWithSourceAsync(languageCodes, sourceTranslations, continueOnError);

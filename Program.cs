@@ -66,8 +66,23 @@ class Program
         services.AddTransient<FileWriter>();
         services.AddTransient<TranslationOrchestrator>();
 
-        // Register Fast OpenRouter translation service
         services.AddTransient<ITranslationService, BaseTranslationService>();
+    }
+
+    private static Option<string?> CreateBTCPayUrlOption() =>
+        new Option<string?>(
+            "--btcpay-url",
+            "Base URL of a BTCPay Server running in debug/cheat mode " +
+            "(e.g. http://localhost:14142). When set, translations are fetched " +
+            "from the /cheat/translations/default-en endpoint instead of GitHub.")
+        {
+            IsRequired = false
+        };
+
+    private static void ApplyBTCPayUrl(IServiceProvider sp, string? btcpayUrl)
+    {
+        if (!string.IsNullOrWhiteSpace(btcpayUrl))
+            sp.GetRequiredService<IConfiguration>()["Translation:BTCPayUrl"] = btcpayUrl;
     }
 
     private static Command CreateTranslateCommand(ServiceProvider serviceProvider)
@@ -83,15 +98,19 @@ class Program
             "--force",
             "Force retranslation of all strings, even if translations already exist");
 
+        var btcpayUrlOption = CreateBTCPayUrlOption();
+
         var command = new Command("translate", "Translate BTCPay Server to a specific language")
         {
             languageOption,
-            forceOption
+            forceOption,
+            btcpayUrlOption
         };
 
-        command.SetHandler(async (language, force) =>
+        command.SetHandler(async (language, force, btcpayUrl) =>
         {
             using var scope = serviceProvider.CreateScope();
+            ApplyBTCPayUrl(scope.ServiceProvider, btcpayUrl);
             var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -109,7 +128,7 @@ class Program
                 logger.LogError("Translation failed!");
                 Environment.Exit(1);
             }
-        }, languageOption, forceOption);
+        }, languageOption, forceOption, btcpayUrlOption);
 
         return command;
     }
@@ -135,16 +154,20 @@ class Program
             IsRequired = false
         };
 
+        var btcpayUrlOption = CreateBTCPayUrlOption();
+
         var command = new Command("batch", "Translate BTCPay Server to multiple languages")
         {
             languagesOption,
             forceOption,
-            continueOnErrorOption
+            continueOnErrorOption,
+            btcpayUrlOption
         };
 
-        command.SetHandler(async (languages, force, continueOnError) =>
+        command.SetHandler(async (languages, force, continueOnError, btcpayUrl) =>
         {
             using var scope = serviceProvider.CreateScope();
+            ApplyBTCPayUrl(scope.ServiceProvider, btcpayUrl);
             var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -166,7 +189,7 @@ class Program
             }
             
             Environment.Exit(successCount == totalCount ? 0 : 1);
-        }, languagesOption, forceOption, continueOnErrorOption);
+        }, languagesOption, forceOption, continueOnErrorOption, btcpayUrlOption);
 
         return command;
     }
@@ -243,14 +266,18 @@ class Program
             IsRequired = true
         };
 
-        var command = new Command("update", "Update an existing translation file with new strings from GitHub")
+        var btcpayUrlOption = CreateBTCPayUrlOption();
+
+        var command = new Command("update", "Update an existing translation file with new strings")
         {
-            languageOption
+            languageOption,
+            btcpayUrlOption
         };
 
-        command.SetHandler(async (language) =>
+        command.SetHandler(async (language, btcpayUrl) =>
         {
             using var scope = serviceProvider.CreateScope();
+            ApplyBTCPayUrl(scope.ServiceProvider, btcpayUrl);
             var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -268,7 +295,7 @@ class Program
                 logger.LogError("Update failed!");
                 Environment.Exit(1);
             }
-        }, languageOption);
+        }, languageOption, btcpayUrlOption);
 
         return command;
     }
@@ -290,15 +317,19 @@ class Program
             IsRequired = false
         };
 
-        var command = new Command("batch-update", "Update multiple existing translation files with new strings from GitHub")
+        var btcpayUrlOption = CreateBTCPayUrlOption();
+
+        var command = new Command("batch-update", "Update multiple existing translation files with new strings")
         {
             languagesOption,
-            continueOnErrorOption
+            continueOnErrorOption,
+            btcpayUrlOption
         };
 
-        command.SetHandler(async (languages, continueOnError) =>
+        command.SetHandler(async (languages, continueOnError, btcpayUrl) =>
         {
             using var scope = serviceProvider.CreateScope();
+            ApplyBTCPayUrl(scope.ServiceProvider, btcpayUrl);
             var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -320,7 +351,7 @@ class Program
             }
             
             Environment.Exit(successCount == totalCount ? 0 : 1);
-        }, languagesOption, continueOnErrorOption);
+        }, languagesOption, continueOnErrorOption, btcpayUrlOption);
 
         return command;
     }
@@ -334,14 +365,18 @@ class Program
             IsRequired = false
         };
 
-        var command = new Command("update-all", "Automatically detect and update all existing translation files with new strings from GitHub")
+        var btcpayUrlOption = CreateBTCPayUrlOption();
+
+        var command = new Command("update-all", "Detect and update all existing translation files with new strings")
         {
-            continueOnErrorOption
+            continueOnErrorOption,
+            btcpayUrlOption
         };
 
-        command.SetHandler(async (continueOnError) =>
+        command.SetHandler(async (continueOnError, btcpayUrl) =>
         {
             using var scope = serviceProvider.CreateScope();
+            ApplyBTCPayUrl(scope.ServiceProvider, btcpayUrl);
             var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -369,8 +404,9 @@ class Program
             }
             
             Environment.Exit(successCount == totalCount ? 0 : 1);
-        }, continueOnErrorOption);
+        }, continueOnErrorOption, btcpayUrlOption);
 
         return command;
     }
+
 }

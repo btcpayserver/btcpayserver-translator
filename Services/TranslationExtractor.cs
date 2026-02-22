@@ -28,6 +28,45 @@ public class TranslationExtractor
         Directory.CreateDirectory(_cacheDirectory);
     }
 
+    public async Task<Dictionary<string, string>> ExtractFromBTCPayServerAsync(string btcpayUrl)
+    {
+        var url = btcpayUrl.TrimEnd('/') + "/cheat/translations/default-en";
+        try
+        {
+            _logger.LogInformation("Fetching translations from BTCPay Server at {Url}", url);
+            var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    throw new InvalidOperationException(
+                        $"The /cheat/translations/default-en endpoint was not found. " +
+                        $"Make sure BTCPay Server is running with cheatmode=true (debug mode) at {btcpayUrl}.");
+
+                response.EnsureSuccessStatusCode();
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var jsonObject = JObject.Parse(json);
+            var translations = new Dictionary<string, string>();
+
+            foreach (var property in jsonObject.Properties())
+            {
+                var value = property.Value?.ToString() ?? "";
+                translations[property.Name] = string.IsNullOrEmpty(value) ? property.Name : value;
+            }
+
+            _logger.LogInformation("Fetched {Count} translations from BTCPay Server", translations.Count);
+            return translations;
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException(
+                $"Could not connect to BTCPay Server at {btcpayUrl}. " +
+                $"Make sure it is running in debug mode (cheatmode=true). Error: {ex.Message}", ex);
+        }
+    }
+
     public async Task<Dictionary<string, string>> ExtractFromDefaultFileAsync(string filePathOrUrl)
     {
         try
@@ -69,14 +108,13 @@ public class TranslationExtractor
                 var key = property.Name;
                 var value = property.Value?.ToString() ?? "";
                 
-                // Skip empty translations (they default to the key itself)
                 if (!string.IsNullOrEmpty(value))
                 {
                     translations[key] = value;
                 }
                 else
                 {
-                    translations[key] = key; // Use key as default value
+                    translations[key] = key;
                 }
             }
 
