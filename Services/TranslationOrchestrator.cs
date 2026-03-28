@@ -44,7 +44,7 @@ public class TranslationOrchestrator
         }
 
         var inputFile = _configuration["Translation:InputFile"] ??
-                        "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs";
+                        "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Plugins/Translations/Translations.Default.cs";
         _logger.LogInformation("Fetching translations from file/URL: {Source}", inputFile);
         return await _extractor.ExtractFromDefaultFileAsync(inputFile);
     }
