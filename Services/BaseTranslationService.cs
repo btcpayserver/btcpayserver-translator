@@ -91,7 +91,7 @@ public class BaseTranslationService : ITranslationService
                 {
                     if (attempt == maxRetries)
                     {
-                        return new TranslationResponse(request.Key, request.SourceText, false, 
+                        return new TranslationResponse(request.Key, string.Empty, false, 
                             $"API error: {response.StatusCode}");
                     }
                     await Task.Delay(1000); // Quick retry delay
@@ -103,7 +103,7 @@ public class BaseTranslationService : ITranslationService
                 {
                     if (attempt == maxRetries)
                     {
-                        return new TranslationResponse(request.Key, request.SourceText, false, 
+                        return new TranslationResponse(request.Key, string.Empty, false, 
                             "HTML error response");
                     }
                     await Task.Delay(1000);
@@ -132,7 +132,7 @@ public class BaseTranslationService : ITranslationService
 
                             if (attempt == maxRetries)
                             {
-                                return new TranslationResponse(request.Key, request.SourceText, false, reason);
+                                return new TranslationResponse(request.Key, string.Empty, false, reason);
                             }
 
                             await Task.Delay(800);
@@ -145,7 +145,7 @@ public class BaseTranslationService : ITranslationService
 
                 if (attempt == maxRetries)
                 {
-                    return new TranslationResponse(request.Key, request.SourceText, false, 
+                    return new TranslationResponse(request.Key, string.Empty, false, 
                         "No translation returned");
                 }
             }
@@ -153,13 +153,13 @@ public class BaseTranslationService : ITranslationService
             {
                 if (attempt == maxRetries)
                 {
-                    return new TranslationResponse(request.Key, request.SourceText, false, ex.Message);
+                    return new TranslationResponse(request.Key, string.Empty, false, ex.Message);
                 }
                 await Task.Delay(500); // Quick retry
             }
         }
 
-        return new TranslationResponse(request.Key, request.SourceText, false, "Translation failed");
+        return new TranslationResponse(request.Key, string.Empty, false, "Translation failed");
     }
 
     public async Task<BatchTranslationResponse> TranslateBatchAsync(BatchTranslationRequest request)

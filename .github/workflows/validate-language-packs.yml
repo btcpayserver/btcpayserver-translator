@@ -20,7 +20,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore btcpayserver-translator.sln
+
+      - name: Build
+        run: dotnet build btcpayserver-translator.sln --no-restore
+
+      - name: Test
+        run: dotnet test btcpayserver-translator.sln --no-build --verbosity normal
 
       - name: Validate Translation Packs
-        run: dotnet run -- validate-packs
+        run: dotnet run --project BTCPayTranslator.csproj --no-build -- validate-packs

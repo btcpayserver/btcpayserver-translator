@@ -105,6 +105,17 @@ public class LanguagePackValidator
                         property.Value = key;
                         fileChanged = true;
                     }
+                    continue;
+                }
+
+                if (TranslationValidationRules.IsShortKeyEnglishFallback(key, value))
+                {
+                    issues.Add(new ValidationIssue(Path.GetFileName(filePath), key, "Common UI label left untranslated (value equals English key)"));
+                    if (fix)
+                    {
+                        property.Value = key;
+                        fileChanged = true;
+                    }
                 }
             }
 

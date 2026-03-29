@@ -123,7 +123,6 @@ class Program
             if (success)
             {
                 logger.LogInformation("Translation completed successfully!");
-                Environment.Exit(0);
             }
             else
             {
@@ -190,7 +189,10 @@ class Program
                 logger.LogInformation("  {Status} {Language}", status, result.Key);
             }
             
-            Environment.Exit(successCount == totalCount ? 0 : 1);
+            if (successCount < totalCount)
+            {
+                Environment.Exit(1);
+            }
         }, languagesOption, forceOption, continueOnErrorOption, btcpayUrlOption);
 
         return command;
@@ -290,7 +292,6 @@ class Program
             if (success)
             {
                 logger.LogInformation("Update completed successfully!");
-                Environment.Exit(0);
             }
             else
             {
@@ -352,7 +353,10 @@ class Program
                 logger.LogInformation("  {Status} {Language}", status, result.Key);
             }
             
-            Environment.Exit(successCount == totalCount ? 0 : 1);
+            if (successCount < totalCount)
+            {
+                Environment.Exit(1);
+            }
         }, languagesOption, continueOnErrorOption, btcpayUrlOption);
 
         return command;
@@ -405,7 +409,10 @@ class Program
                 logger.LogInformation("  {Status} {Language}", status, result.Key);
             }
             
-            Environment.Exit(successCount == totalCount ? 0 : 1);
+            if (successCount < totalCount)
+            {
+                Environment.Exit(1);
+            }
         }, continueOnErrorOption, btcpayUrlOption);
 
         return command;
@@ -458,10 +465,7 @@ class Program
                 }
 
                 Environment.Exit(1);
-                return;
             }
-
-            Environment.Exit(0);
         }, fixOption);
 
         return command;
