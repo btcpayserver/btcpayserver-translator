@@ -44,13 +44,15 @@ public class BaseTranslationService : ITranslationService
 
     public async Task<TranslationResponse> TranslateAsync(TranslationRequest request)
     {
-        var maxRetries = 2; // Reduced retries for speed
+        var maxRetries = 3;
         
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
             try
             {
-                // Optimized prompt for faster processing
+                var strictMode = attempt > 1;
+                var maxTokens = ComputeMaxTokens(request.SourceText);
+
                 var requestBody = new
                 {
                     model = _model,
@@ -58,40 +60,15 @@ public class BaseTranslationService : ITranslationService
                     {
                         new { 
                             role = "system", 
-                            content = $@"You are a professional translator for BTCPay Server, a Bitcoin payment processor.
-Translate the given English text to {request.TargetLanguage}.
-
-## Context
-This text is UI content for a BTCPayServer payment system.
-Your goal is to produce clear, professional, and user-friendly translations suitable for financial software.
-
-## Guidelines
-
-- For cryptocurrency and blockchain-specific terms (Bitcoin, Lightning, wallet types, etc.): use transliteration into the target language's script, or keep the English term if no transliteration is natural.
-- For standard UI terms (Settings, Invoice, Dashboard, etc.): use the officially accepted translation in the target language if one exists and is widely used. Otherwise, transliterate.
-- Use a formal tone, appropriate for financial applications.
-- Keep placeholder variables like {{0}}, {{1}} unchanged.
-- Preserve HTML tags and special formatting as-is.
-- Never translate a term literally word-by-word if the result is unnatural or unused in the target language.
-- Ensure proper sentence structure according to the target language's grammar rules.
-
-## English Translation Examples
-
-- ""Hot wallet"" -> Hindi: ""हॉट वॉलेट"" | Spanish: ""Hot wallet"" | French: ""Hot wallet""
-- ""Invoice"" -> Hindi: ""इनवॉइस"" | Spanish: ""Factura"" | French: ""Facture""
-- ""Settings"" -> Hindi: ""सेटिंग्स"" | Spanish: ""Configuración"" | French: ""Paramètres""
-- ""Payment successful"" -> Hindi: ""भुगतान सफल हुआ"" | Spanish: ""Pago exitoso"" | French: ""Paiement réussi""
-
-Respond with only the translated text.
-No explanations, no additional formatting, no comments."
+                            content = BuildSystemPrompt(request.TargetLanguage, strictMode)
                         },
                         new { 
                             role = "user", 
                             content = request.SourceText
                         }
                     },
-                    max_tokens = 400, // Reduced for faster response
-                    temperature = 0.0 // More deterministic
+                    max_tokens = maxTokens,
+                    temperature = 0.0
                 };
 
                 var json = JsonSerializer.Serialize(requestBody);
@@ -114,7 +91,7 @@ No explanations, no additional formatting, no comments."
                 {
                     if (attempt == maxRetries)
                     {
-                        return new TranslationResponse(request.Key, request.SourceText, false, 
+                        return new TranslationResponse(request.Key, string.Empty, false, 
                             $"API error: {response.StatusCode}");
                     }
                     await Task.Delay(1000); // Quick retry delay
@@ -126,7 +103,7 @@ No explanations, no additional formatting, no comments."
                 {
                     if (attempt == maxRetries)
                     {
-                        return new TranslationResponse(request.Key, request.SourceText, false, 
+                        return new TranslationResponse(request.Key, string.Empty, false, 
                             "HTML error response");
                     }
                     await Task.Delay(1000);
@@ -144,13 +121,31 @@ No explanations, no additional formatting, no comments."
                     var translatedText = contentElement.GetString()?.Trim();
                     if (!string.IsNullOrEmpty(translatedText))
                     {
+                        if (!IsValidTranslationOutput(request.SourceText, translatedText, out var reason))
+                        {
+                            _logger.LogWarning(
+                                "Rejected suspicious translation for key '{Key}' (attempt {Attempt}/{MaxRetries}): {Reason}",
+                                request.Key,
+                                attempt,
+                                maxRetries,
+                                reason);
+
+                            if (attempt == maxRetries)
+                            {
+                                return new TranslationResponse(request.Key, string.Empty, false, reason);
+                            }
+
+                            await Task.Delay(800);
+                            continue;
+                        }
+
                         return new TranslationResponse(request.Key, translatedText, true);
                     }
                 }
 
                 if (attempt == maxRetries)
                 {
-                    return new TranslationResponse(request.Key, request.SourceText, false, 
+                    return new TranslationResponse(request.Key, string.Empty, false, 
                         "No translation returned");
                 }
             }
@@ -158,13 +153,13 @@ No explanations, no additional formatting, no comments."
             {
                 if (attempt == maxRetries)
                 {
-                    return new TranslationResponse(request.Key, request.SourceText, false, ex.Message);
+                    return new TranslationResponse(request.Key, string.Empty, false, ex.Message);
                 }
                 await Task.Delay(500); // Quick retry
             }
         }
 
-        return new TranslationResponse(request.Key, request.SourceText, false, "Translation failed");
+        return new TranslationResponse(request.Key, string.Empty, false, "Translation failed");
     }
 
     public async Task<BatchTranslationResponse> TranslateBatchAsync(BatchTranslationRequest request)
@@ -258,5 +253,62 @@ No explanations, no additional formatting, no comments."
     public void Dispose()
     {
         _semaphore?.Dispose();
+    }
+
+    private static string BuildSystemPrompt(string targetLanguage, bool strictMode)
+    {
+        var strictRules = strictMode
+            ? "\n\nSTRICT RETRY MODE: Your previous answer was invalid. Do not ask for more input. Return only the final translated UI string."
+            : string.Empty;
+
+        return $@"You are translating a single BTCPay Server UI string to {targetLanguage}.
+
+Rules:
+- Translate the full meaning faithfully. Do not summarize, simplify, or omit details.
+- Keep the original tone and intent (for example, command labels remain short/imperative).
+- Preserve placeholders exactly (examples: {{0}}, {{OrderId}}, {{InvoiceId}}).
+- Preserve HTML tags/entities, punctuation, casing, and line breaks exactly.
+- Keep technical/product names and standard crypto terms in English when commonly used.
+- Do not translate to English unless the source is already English-only technical jargon.
+- Never ask for more text or context.
+- Never mention instructions, prompts, role, AI, or translation process.
+- Output only the translated text for this one string, with no quotes or extra commentary.
+
+Return only the translated string.{strictRules}";
+    }
+
+    private static int ComputeMaxTokens(string sourceText)
+    {
+        if (string.IsNullOrEmpty(sourceText))
+            return 220;
+
+        // Approximate source tokens and allow expansion for longer target-language strings.
+        var estimatedTokens = (int)Math.Ceiling((sourceText.Length / 4.0) * 2.0);
+        var bounded = Math.Clamp(estimatedTokens, 220, 900);
+        return bounded;
+    }
+
+    private static bool IsValidTranslationOutput(string sourceText, string translatedText, out string reason)
+    {
+        if (TranslationValidationRules.IsSuspiciousMetaResponse(translatedText))
+        {
+            reason = "Suspicious LLM/meta-response content";
+            return false;
+        }
+
+        if (!TranslationValidationRules.HasMatchingPlaceholders(sourceText, translatedText))
+        {
+            reason = "Placeholder/token mismatch";
+            return false;
+        }
+
+        if (TranslationValidationRules.IsLikelySentenceFallback(sourceText, translatedText))
+        {
+            reason = "Suspicious source fallback (sentence-like translation equals source text)";
+            return false;
+        }
+
+        reason = string.Empty;
+        return true;
     }
 }

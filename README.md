@@ -73,6 +73,24 @@ dotnet run -- batch --languages hi es fr de --force
 dotnet run -- status
 ```
 
+### Validate Translation Packs (Meta-Response + Token Checks)
+```bash
+# Validate all translation files
+dotnet run -- validate-packs
+
+# Auto-fix suspicious entries by falling back to source English keys,
+# then re-run validation
+dotnet run -- validate-packs --fix
+```
+
+This validator checks for:
+- LLM/meta-responses accidentally saved as translations (for example, "Please provide the English text...")
+- Additional assistant variants (for example, "I'm waiting for the English text...", "Ready to translate English...")
+- Placeholder/token mismatches between source keys and translated values (for example, `{0}`, `{OrderId}`)
+- Sentence-like source fallback in non-English packs where `value == key` for user-facing text
+
+CI also runs this validation on pull requests and pushes to `main`.
+
 ### Update Existing Translation with New Strings
 
 #### Update Single Language

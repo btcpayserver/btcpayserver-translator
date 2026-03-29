@@ -32,3 +32,5 @@ Thumbs.db
 *.tmp
 *.temp
 
+# Ignored file
+btcpayserver-translator.sln
