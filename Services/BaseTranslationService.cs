@@ -167,69 +167,229 @@ No explanations, no additional formatting, no comments."
         return new TranslationResponse(request.Key, request.SourceText, false, "Translation failed");
     }
 
+    private async Task<List<TranslationResponse>> TranslateGroupAsync(
+        List<TranslationRequest> group, int maxRetries = 2)
+    {
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                var targetLanguage = group[0].TargetLanguage;
+
+                // Build numbered list: "1. text\n2. text\n..."
+                var userContent = string.Join("\n", group.Select((r, i) => $"{i + 1}. {r.SourceText}"));
+
+                var requestBody = new
+                {
+                    model = _model,
+                    messages = new[]
+                    {
+                        new {
+                            role = "system",
+                            content = $@"You are a professional translator for BTCPay Server, a Bitcoin payment processor.
+Translate each numbered English string to {targetLanguage}.
+
+## Context
+This text is UI content for a BTCPayServer payment system.
+Your goal is to produce clear, professional, and user-friendly translations suitable for financial software.
+
+## Guidelines
+
+• Keep technical and cryptocurrency terms in their commonly used form, preferably using transliteration when appropriate.
+
+• Retain key terms such as Bitcoin, Lightning, and other crypto-specific terms as-is or transliterated into the target language.
+
+• Use a formal tone, appropriate for financial applications.
+
+• Keep placeholder variables like {{0}}, {{1}} unchanged.
+
+• Preserve HTML tags and special formatting as-is.
+
+• Prefer transliteration over translation for standard UI terms unless there is a widely accepted translated equivalent.
+
+• Ensure proper sentence structure according to the target language's grammar rules.
+
+## Examples
+
+| English Text | Hindi Translation | Spanish Translation | French Translation |
+|--------------|-------------------|---------------------|-------------------|
+| ""Hot wallet"" | ""हॉट वॉलेट"" | ""Hot wallet"" | ""Portefeuille chaud"" |
+| ""Invoice"" | ""इनवॉइस"" | ""Factura"" | ""Facture"" |
+| ""Settings"" | ""सेटिंग्स"" | ""Configuración"" | ""Paramètres"" |
+| ""Payment successful"" | ""भुगतान सफल हुआ"" | ""Pago exitoso"" | ""Paiement réussi"" |
+
+Edge Cases:
+
+- If the term is widely used as-is in the target language (e.g., ""Invoice""), prefer transliteration in non-English languages.
+- If a clear translation exists and is commonly used (e.g., ""Settings"" → ""Paramètres"" in French), use the translated term.
+- Do not translate placeholders or variables.
+- Do not explain your translation — output only the final translated strings.
+
+Respond with ONLY a numbered list matching the input order, one translation per line.
+Format exactly: ""1. <translation>\n2. <translation>\n..."" — no extra text, no blank lines between entries."
+                        },
+                        new {
+                            role = "user",
+                            content = userContent
+                        }
+                    },
+                    max_tokens = group.Count * 60 + 50,
+                    temperature = 0.0,
+                    top_p = 0.9
+                };
+
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://openrouter.ai/api/v1/chat/completions")
+                {
+                    Content = content
+                };
+
+                httpRequest.Headers.Add("Authorization", $"Bearer {_apiKey}");
+                httpRequest.Headers.Add("HTTP-Referer", "BTCPayTranslator");
+                httpRequest.Headers.Add("X-Title", "BTCPayServer");
+
+                var response = await _httpClient.SendAsync(httpRequest);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (attempt == maxRetries)
+                        break;
+                    await Task.Delay(1000);
+                    continue;
+                }
+
+                if (responseContent.TrimStart().StartsWith("<"))
+                {
+                    if (attempt == maxRetries)
+                        break;
+                    await Task.Delay(1000);
+                    continue;
+                }
+
+                var jsonResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+                if (jsonResponse.TryGetProperty("choices", out var choices) &&
+                    choices.GetArrayLength() > 0 &&
+                    choices[0].TryGetProperty("message", out var message) &&
+                    message.TryGetProperty("content", out var contentElement))
+                {
+                    var rawText = contentElement.GetString()?.Trim() ?? "";
+                    var lines = rawText
+                        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(l => l.Trim())
+                        .Where(l => !string.IsNullOrWhiteSpace(l))
+                        .ToList();
+
+                    // Parse "N. translation" lines
+                    var parsed = new Dictionary<int, string>();
+                    foreach (var line in lines)
+                    {
+                        var dotIndex = line.IndexOf('.');
+                        if (dotIndex > 0 && int.TryParse(line[..dotIndex].Trim(), out var num))
+                        {
+                            parsed[num] = line[(dotIndex + 1)..].Trim();
+                        }
+                    }
+
+                    // If we got enough lines back, return results
+                    if (parsed.Count >= group.Count)
+                    {
+                        return group.Select((req, i) =>
+                            parsed.TryGetValue(i + 1, out var t) && !string.IsNullOrEmpty(t)
+                                ? new TranslationResponse(req.Key, t, true)
+                                : new TranslationResponse(req.Key, req.SourceText, false, "Missing in group response")
+                        ).ToList();
+                    }
+
+                    // Partial response — fall back to individually retrying missing ones
+                    _logger.LogWarning("Group response had {Got}/{Expected} lines, retrying missing items individually",
+                        parsed.Count, group.Count);
+
+                    var fallbackResults = new List<TranslationResponse>();
+                    for (int i = 0; i < group.Count; i++)
+                    {
+                        if (parsed.TryGetValue(i + 1, out var t) && !string.IsNullOrEmpty(t))
+                        {
+                            fallbackResults.Add(new TranslationResponse(group[i].Key, t, true));
+                        }
+                        else
+                        {
+                            fallbackResults.Add(await TranslateAsync(group[i]));
+                        }
+                    }
+                    return fallbackResults;
+                }
+
+                if (attempt == maxRetries)
+                    break;
+            }
+            catch (Exception ex)
+            {
+                if (attempt == maxRetries)
+                {
+                    _logger.LogWarning(ex, "Group translation failed, falling back to individual translation");
+                    break;
+                }
+                await Task.Delay(500);
+            }
+        }
+
+        // Full fallback: translate each item individually
+        var individualResults = new List<TranslationResponse>();
+        foreach (var req in group)
+            individualResults.Add(await TranslateAsync(req));
+        return individualResults;
+    }
+
     public async Task<BatchTranslationResponse> TranslateBatchAsync(BatchTranslationRequest request)
     {
         var startTime = DateTime.UtcNow;
         var results = new List<TranslationResponse>();
         
-        _logger.LogInformation("Starting FAST batch translation of {Count} items to {Language} with 2 concurrent requests", 
-            request.Items.Count, request.TargetLanguage);
+        const int groupSize = 30; // strings per API call
+        _logger.LogInformation("Starting batch translation of {Count} items to {Language} in groups of {GroupSize}", 
+            request.Items.Count, request.TargetLanguage, groupSize);
 
-        // Process in parallel chunks for speed
-        var chunks = ChunkItems(request.Items, 50); // Process 50 at a time
+        // Split all items into groups of groupSize; process groups concurrently (semaphore-limited)
+        var groups = ChunkItems(request.Items, groupSize).ToList();
         var completedCount = 0;
 
-        foreach (var chunk in chunks)
+        var groupTasks = groups.Select(async group =>
         {
-            var chunkTasks = chunk.Select(async item =>
+            await _semaphore.WaitAsync();
+            try
             {
-                await _semaphore.WaitAsync();
-                try
-                {
-                    var translationRequest = new TranslationRequest(
-                        item.Key,
-                        item.SourceText,
-                        request.TargetLanguage,
-                        item.Context
-                    );
+                var translationRequests = group
+                    .Select(item => new TranslationRequest(item.Key, item.SourceText, request.TargetLanguage, item.Context))
+                    .ToList();
 
-                    var result = await TranslateAsync(translationRequest);
-                    
-                    // Log progress every 10 items
-                    var currentCount = Interlocked.Increment(ref completedCount);
-                    if (currentCount % 10 == 0)
-                    {
-                        _logger.LogInformation("Progress: {Current}/{Total} completed", currentCount, request.Items.Count);
-                    }
+                var groupResults = await TranslateGroupAsync(translationRequests);
 
-                    return result;
-                }
-                finally
-                {
-                    _semaphore.Release();
-                    // Small delay to avoid overwhelming the API
-                    await Task.Delay(300); // Increased delay to avoid rate limits
-                }
-            });
+                var currentCount = Interlocked.Add(ref completedCount, group.Count);
+                _logger.LogInformation("Progress: {Current}/{Total} completed", currentCount, request.Items.Count);
 
-            var chunkResults = await Task.WhenAll(chunkTasks);
-            results.AddRange(chunkResults);
-
-            // Brief pause between chunks
-            if (chunks.Count() > 1)
-            {
-                await Task.Delay(500); // Half second between chunks
+                return groupResults;
             }
-        }
+            finally
+            {
+                _semaphore.Release();
+            }
+        });
+
+        var allGroupResults = await Task.WhenAll(groupTasks);
+        foreach (var groupResult in allGroupResults)
+            results.AddRange(groupResult);
 
         var duration = DateTime.UtcNow - startTime;
         var successCount = results.Count(r => r.Success);
         var failureCount = results.Count - successCount;
 
-        _logger.LogInformation("FAST batch translation completed: {SuccessCount}/{TotalCount} successful in {Duration:mm\\:ss}", 
+        _logger.LogInformation("Batch translation completed: {SuccessCount}/{TotalCount} successful in {Duration:mm\\:ss}", 
             successCount, results.Count, duration);
 
-        // Log some sample translations
         var successfulTranslations = results.Where(r => r.Success).Take(5);
         foreach (var translation in successfulTranslations)
         {
@@ -237,7 +397,6 @@ No explanations, no additional formatting, no comments."
                 translation.Key, translation.TranslatedText);
         }
 
-        // Log failures
         var failures = results.Where(r => !r.Success).Take(5);
         foreach (var failure in failures)
         {
