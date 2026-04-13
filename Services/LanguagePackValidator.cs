@@ -49,7 +49,7 @@ public class LanguagePackValidator
             JObject json;
             var fileChanged = false;
 
-            void ApplyFix(JProperty property, string key)
+            void ApplyFix(JProperty property, string key, string currentValue, bool sentenceFallback = false)
             {
                 if (TranslationValidationRules.IsShortKeyFallbackHotspot(key))
                 {
@@ -57,7 +57,16 @@ public class LanguagePackValidator
                 }
                 else
                 {
-                    property.Value = key;
+                    var fallbackText = TranslationValidationRules.ResolveSentenceFallback(key);
+                    if (sentenceFallback && string.Equals(currentValue, fallbackText, StringComparison.Ordinal))
+                    {
+                        // Avoid a no-op for sentence fallbacks: remove the entry so runtime falls back cleanly.
+                        property.Remove();
+                    }
+                    else
+                    {
+                        property.Value = fallbackText;
+                    }
                 }
 
                 fileChanged = true;
@@ -94,7 +103,7 @@ public class LanguagePackValidator
                     issues.Add(new ValidationIssue(Path.GetFileName(filePath), key, "Suspicious LLM/meta-response content"));
                     if (fix)
                     {
-                        ApplyFix(property, key);
+                        ApplyFix(property, key, value);
                     }
                     continue;
                 }
@@ -104,7 +113,7 @@ public class LanguagePackValidator
                     issues.Add(new ValidationIssue(Path.GetFileName(filePath), key, "Suspicious source fallback (sentence-like value equals source key)"));
                     if (fix)
                     {
-                        ApplyFix(property, key);
+                        ApplyFix(property, key, value, sentenceFallback: true);
                     }
                     continue;
                 }
@@ -114,7 +123,7 @@ public class LanguagePackValidator
                     issues.Add(new ValidationIssue(Path.GetFileName(filePath), key, "Placeholder/token mismatch between source key and translation"));
                     if (fix)
                     {
-                        ApplyFix(property, key);
+                        ApplyFix(property, key, value);
                     }
                     continue;
                 }
@@ -124,7 +133,7 @@ public class LanguagePackValidator
                     issues.Add(new ValidationIssue(Path.GetFileName(filePath), key, "Common UI label left untranslated (value equals English key)"));
                     if (fix)
                     {
-                        ApplyFix(property, key);
+                        ApplyFix(property, key, value);
                     }
                 }
             }

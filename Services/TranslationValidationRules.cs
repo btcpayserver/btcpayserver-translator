@@ -10,6 +10,12 @@ internal static class TranslationValidationRules
     private static readonly Regex PlaceholderRegex =
         new(@"\{[A-Za-z0-9_]+\}", RegexOptions.Compiled);
 
+    private static readonly Regex HtmlTagRegex =
+        new(@"<[^>]+>", RegexOptions.Compiled);
+
+    private static readonly Regex WhitespaceRegex =
+        new(@"\s+", RegexOptions.Compiled);
+
     private static readonly Regex TokenRegex =
         new(@"[A-Za-z0-9+./_-]+", RegexOptions.Compiled);
 
@@ -91,15 +97,18 @@ internal static class TranslationValidationRules
     // Allowlist of short labels that can legitimately appear unchanged in many locales.
     private static readonly HashSet<string> ShortKeyAllowlist = new(StringComparer.Ordinal)
     {
-        "Confirm", "Reset", "Yes",
-        "No", "Start", "Source", "Done", "Save", "Send", "Image", "Edit",
+        "Reset",
+        "No", "Start", "Source", "Done", "Save", "Send", "Image",
         "API", "URL", "URI", "JSON", "CSV", "PSBT", "BTC", "LNURL", "Tor",
     };
 
     // Focused hotspot keys that have repeatedly been contaminated with English fallback values.
     private static readonly HashSet<string> ShortKeyHotspotKeys = new(StringComparer.Ordinal)
     {
+        "Change Role",
+        "Confirm",
         "Continue",
+        "Edit",
         "Edit plan",
         "here",
         "Inputs",
@@ -112,6 +121,8 @@ internal static class TranslationValidationRules
         "Retry",
         "Text",
         "Translations",
+        "Update Role",
+        "Yes",
         "RESET",
         "Role updated",
         "Role created",
@@ -203,6 +214,11 @@ internal static class TranslationValidationRules
         return ShortKeyHotspotKeys.Contains(trimmed);
     }
 
+    public static string ResolveSentenceFallback(string source)
+    {
+        return source;
+    }
+
     public static bool HasMatchingPlaceholders(string source, string translation)
     {
         var sourceTokens = ExtractTokenCounts(source);
@@ -230,17 +246,21 @@ internal static class TranslationValidationRules
         if (string.IsNullOrWhiteSpace(source) || source.Length < 20)
             return false;
 
-        if (PlaceholderRegex.IsMatch(source))
+        var sourceForAnalysis = HtmlTagRegex.Replace(source, " ");
+        sourceForAnalysis = PlaceholderRegex.Replace(sourceForAnalysis, " ");
+        sourceForAnalysis = WhitespaceRegex.Replace(sourceForAnalysis, " ").Trim();
+
+        if (string.IsNullOrWhiteSpace(sourceForAnalysis) || sourceForAnalysis.Length < 20)
             return false;
 
-        var words = source.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var words = sourceForAnalysis.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (words.Length < 4)
             return false;
 
-        if (!source.Any(char.IsLower))
+        if (!sourceForAnalysis.Any(char.IsLower))
             return false;
 
-        var tokens = TokenRegex.Matches(source).Select(match => match.Value).ToList();
+        var tokens = TokenRegex.Matches(sourceForAnalysis).Select(match => match.Value).ToList();
         if (tokens.Count == 0)
             return false;
 
