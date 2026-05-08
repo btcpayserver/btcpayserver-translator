@@ -1,4 +1,5 @@
 {
+  "_maintainer": "your_name|yout_git_hub_link",
   "... on every payment": "... हर भुगतान पर",
   "... only if the customer makes more than one payment for the invoice": "... केवल यदि ग्राहक चालान के लिए एक से अधिक भुगतान करता है",
   "'{0}' already exists": "'{0}' पहले से मौजूद है",

@@ -1,4 +1,5 @@
 {
+  "_maintainer": "your_name|yout_git_hub_link",
   "... on every payment": "... すべての支払いで",
   "... only if the customer makes more than one payment for the invoice": "... 顧客がインボイスに対して複数回の支払いを行った場合のみ",
   "'{0}' already exists": "'{0}' は既に存在します",

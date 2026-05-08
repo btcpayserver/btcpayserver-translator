@@ -1,4 +1,5 @@
 {
+  "_maintainer": "your_name|yout_git_hub_link",
   "... on every payment": "... pada setiap pembayaran",
   "... only if the customer makes more than one payment for the invoice": "... hanya jika pelanggan melakukan lebih dari satu pembayaran untuk faktur tersebut",
   "'{0}' already exists": "'{0}' sudah ada",
