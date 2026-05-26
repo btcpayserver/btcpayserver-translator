@@ -13,6 +13,21 @@ internal static class TranslationValidationRules
     private static readonly Regex HtmlTagRegex =
         new(@"<[^>]+>", RegexOptions.Compiled);
 
+    // Recognised HTML/markup tags whose presence/absence in translations is
+    // load-bearing for the UI. Restricting the multiset comparison to this
+    // allowlist keeps the rule from false-flagging localized example data
+    // like "<email@primer.com>" or "<John Doe>" which the bare HtmlTagRegex
+    // also matches.
+    private static readonly Regex StructuralHtmlTagRegex =
+        new(@"<\s*/?\s*(strong|em|b|i|u|code|pre|kbd|small|sub|sup|mark|br|p|div|span|a|ul|ol|li|h[1-6]|table|thead|tbody|tr|td|th|abbr|del|ins|q|cite|var|samp)\b[^>]*>",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    // Maintainer field shape: "<display name or handle>|<https URL>". The
+    // pipe + URL gives us a stable parse for the manifest generator + lets
+    // us catch malformed entries (missing pipe, non-https URL, empty parts).
+    private static readonly Regex MaintainerFieldRegex =
+        new(@"^[^|]+\|https://\S+$", RegexOptions.Compiled);
+
     private static readonly Regex WhitespaceRegex =
         new(@"\s+", RegexOptions.Compiled);
 
@@ -246,6 +261,46 @@ internal static class TranslationValidationRules
         return true;
     }
 
+    /// <summary>
+    /// Checks that the source and translation use the same multiset of structural
+    /// HTML tags (case-insensitive). Catches accidental drops or extras like a
+    /// missing closing &lt;/strong&gt; or a lost &lt;code&gt; pair in a translated
+    /// block - both of which silently break rendering. Only counts tags from a
+    /// curated allowlist of real markup elements so localized example data
+    /// (&lt;email@primer.com&gt;, &lt;John Doe&gt;) doesn't trip the rule.
+    /// </summary>
+    public static bool HasMatchingHtmlTags(string source, string translation)
+    {
+        var sourceTags = ExtractStructuralTagCounts(source);
+        var translationTags = ExtractStructuralTagCounts(translation);
+
+        if (sourceTags.Count != translationTags.Count)
+            return false;
+
+        foreach (var entry in sourceTags)
+        {
+            if (!translationTags.TryGetValue(entry.Key, out var count) || count != entry.Value)
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Validates the shape of the _maintainer field that ManifestGenerator expects:
+    /// "&lt;display name or handle&gt;|&lt;https URL&gt;". Missing pipe, missing URL,
+    /// or non-https URL all fail. Empty / whitespace value is treated as
+    /// "field present but unset" - the file-level scanner flags that separately
+    /// if it cares about presence.
+    /// </summary>
+    public static bool IsValidMaintainerValue(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        return MaintainerFieldRegex.IsMatch(value.Trim());
+    }
+
     public static bool IsLikelySentenceFallback(string source, string translation)
     {
         if (!string.Equals(source, translation, StringComparison.Ordinal))
@@ -296,6 +351,30 @@ internal static class TranslationValidationRules
             {
                 counts[match.Value]++;
             }
+        }
+
+        return counts;
+    }
+
+    private static readonly Regex TagNameRegex =
+        new(@"<\s*/?\s*([A-Za-z][A-Za-z0-9]*)", RegexOptions.Compiled);
+
+    private static Dictionary<string, int> ExtractStructuralTagCounts(string text)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (Match match in StructuralHtmlTagRegex.Matches(text))
+        {
+            // Key on tag name + open-vs-close so <code> and </code> are tracked
+            // separately (dropped closing tags are the common bug). <CODE> and
+            // <code> are folded since HTML tag names are case-insensitive.
+            var raw = match.Value;
+            var nameMatch = TagNameRegex.Match(raw);
+            if (!nameMatch.Success) continue;
+            var isClose = raw.TrimStart('<').TrimStart().StartsWith('/');
+            var key = (isClose ? "/" : string.Empty) + nameMatch.Groups[1].Value.ToLowerInvariant();
+            if (!counts.TryAdd(key, 1))
+                counts[key]++;
         }
 
         return counts;

@@ -73,6 +73,21 @@ public class LanguagePackValidator
             {
                 var key = property.Name;
                 var value = property.Value?.ToString() ?? string.Empty;
+
+                // The _maintainer field is metadata, not a translation entry.
+                // Validate its shape independently and skip the per-entry rules.
+                if (key.Equals("_maintainer", StringComparison.Ordinal))
+                {
+                    if (!TranslationValidationRules.IsValidMaintainerValue(value))
+                    {
+                        issues.Add(new ValidationIssue(
+                            Path.GetFileName(filePath),
+                            key,
+                            "Invalid _maintainer value (expected '<display name or handle>|<https URL>')"));
+                    }
+                    continue;
+                }
+
                 totalEntries++;
 
                 if (TranslationValidationRules.IsSuspiciousMetaResponse(value))
@@ -112,6 +127,19 @@ public class LanguagePackValidator
                     {
                         fileChanged |= ApplyFix(property, key, value);
                     }
+                    continue;
+                }
+
+                if (!TranslationValidationRules.HasMatchingHtmlTags(key, value))
+                {
+                    issues.Add(new ValidationIssue(
+                        Path.GetFileName(filePath),
+                        key,
+                        "Structural HTML tag mismatch between source key and translation"));
+                    // Auto-fix is intentionally skipped here: restoring the
+                    // English source would lose the translated prose around
+                    // the tags. Maintainer needs to re-anchor the markup by
+                    // hand.
                 }
             }
 

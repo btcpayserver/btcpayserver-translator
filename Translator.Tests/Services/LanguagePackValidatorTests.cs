@@ -128,6 +128,173 @@ public class LanguagePackValidatorTests
         }
     }
 
+    [Fact]
+    public async Task ValidateAsync_FlagsHtmlTagMismatch()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var filePath = Path.Combine(tempDir, "hindi.json");
+            await File.WriteAllTextAsync(filePath, """
+                {
+                  "<strong>Never</strong> trust anything but <code>id</code>": "केवल <code>id</code> पर भरोसा करें",
+                  "kept-intact": "<code>foo</code> bar <code>baz</code>"
+                }
+                """.Replace("<code>foo</code> bar <code>baz</code>",
+                            "<code>foo</code> bar <code>baz</code>"));
+
+            // Re-write with a balanced kept-intact entry so only the first entry fails the rule
+            await File.WriteAllTextAsync(filePath, """
+                {
+                  "<strong>Never</strong> trust anything but <code>id</code>": "केवल <code>id</code> पर भरोसा करें",
+                  "<code>foo</code>": "<code>foo</code>"
+                }
+                """);
+
+            var sut = CreateSut(tempDir);
+            var result = await sut.ValidateAsync(fix: false);
+
+            Assert.Equal(2, result.EntriesScanned);
+            var issue = Assert.Single(result.Issues);
+            Assert.StartsWith("<strong>Never", issue.Key);
+            Assert.Contains("Structural HTML tag mismatch", issue.Reason);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ValidateAsync_IgnoresExampleEmailAngleBrackets()
+    {
+        // The HTML-tag check uses a curated allowlist of structural elements
+        // (strong/em/code/br/p/a/etc.) so localized example data like
+        // "<email@primer.com>" doesn't trip the rule even though the bare
+        // HtmlTagRegex would match it.
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var filePath = Path.Combine(tempDir, "serbian.json");
+            await File.WriteAllTextAsync(filePath, """
+                {
+                  "Firstname Lastname <email@example.com>": "Ime Prezime <email@primer.com>"
+                }
+                """);
+
+            var sut = CreateSut(tempDir);
+            var result = await sut.ValidateAsync(fix: false);
+
+            Assert.Equal(1, result.EntriesScanned);
+            Assert.Empty(result.Issues);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ValidateAsync_FlagsInvalidMaintainerField()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var filePath = Path.Combine(tempDir, "bad-maintainer.json");
+            await File.WriteAllTextAsync(filePath, """
+                {
+                  "_maintainer": "someone with no pipe or URL",
+                  "hello": "bonjour"
+                }
+                """);
+
+            var sut = CreateSut(tempDir);
+            var result = await sut.ValidateAsync(fix: false);
+
+            // _maintainer is not counted as a translation entry
+            Assert.Equal(1, result.EntriesScanned);
+            var issue = Assert.Single(result.Issues);
+            Assert.Equal("_maintainer", issue.Key);
+            Assert.Contains("Invalid _maintainer value", issue.Reason);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ValidateAsync_AcceptsWellFormedMaintainerField()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var filePath = Path.Combine(tempDir, "ok-maintainer.json");
+            await File.WriteAllTextAsync(filePath, """
+                {
+                  "_maintainer": "thgO-O|https://github.com/thgO-O",
+                  "hello": "olá"
+                }
+                """);
+
+            var sut = CreateSut(tempDir);
+            var result = await sut.ValidateAsync(fix: false);
+
+            Assert.Equal(1, result.EntriesScanned);
+            Assert.Empty(result.Issues);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ValidateAsync_RejectsMaintainerWithHttpScheme()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var filePath = Path.Combine(tempDir, "http-maintainer.json");
+            await File.WriteAllTextAsync(filePath, """
+                {
+                  "_maintainer": "thgO-O|http://github.com/thgO-O"
+                }
+                """);
+
+            var sut = CreateSut(tempDir);
+            var result = await sut.ValidateAsync(fix: false);
+
+            var issue = Assert.Single(result.Issues);
+            Assert.Equal("_maintainer", issue.Key);
+            Assert.Contains("Invalid _maintainer", issue.Reason);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
     private static LanguagePackValidator CreateSut(string outputDirectory)
     {
         var configuration = new ConfigurationBuilder()
