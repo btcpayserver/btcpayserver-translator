@@ -888,7 +888,7 @@
   "Invalid currency pairs (should be for example: {0})": "Neispravni parovi valuta (trebalo bi da bude na primer: {0})",
   "Invalid destination or payment method": "Neispravna destinacija ili metod plaćanja",
   "Invalid email": "Neispravna email adresa",
-  "Invalid email address or placeholder detected": "Jedna od email adresa ili vrednosti u formatu {…} za primaoca nije ispravna.",
+  "Invalid email address or placeholder detected": "Neispravna email adresa ili čuvar mesta.",
   "Invalid file name": "Nevažeće ime fajla",
   "Invalid login attempt.": "Prijava nije uspela.",
   "Invalid network": "Neispravna mreža",
