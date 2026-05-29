@@ -295,6 +295,68 @@ public class LanguagePackValidatorTests
         }
     }
 
+    [Fact]
+    public async Task ValidateAsync_AcceptsNullMaintainerField()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var filePath = Path.Combine(tempDir, "null-maintainer.json");
+            await File.WriteAllTextAsync(filePath, """
+                {
+                  "_maintainer": null,
+                  "hello": "hei"
+                }
+                """);
+
+            var sut = CreateSut(tempDir);
+            var result = await sut.ValidateAsync(fix: false);
+
+            Assert.Equal(1, result.EntriesScanned);
+            Assert.Empty(result.Issues);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ValidateAsync_RejectsBlankMaintainerField_WhenPresent()
+    {
+        var tempDir = CreateTempDirectory();
+
+        try
+        {
+            var filePath = Path.Combine(tempDir, "blank-maintainer.json");
+            await File.WriteAllTextAsync(filePath, """
+                {
+                  "_maintainer": "   ",
+                  "hello": "hei"
+                }
+                """);
+
+            var sut = CreateSut(tempDir);
+            var result = await sut.ValidateAsync(fix: false);
+
+            Assert.Equal(1, result.EntriesScanned);
+            var issue = Assert.Single(result.Issues);
+            Assert.Equal("_maintainer", issue.Key);
+            Assert.Contains("Invalid _maintainer", issue.Reason);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
     private static LanguagePackValidator CreateSut(string outputDirectory)
     {
         var configuration = new ConfigurationBuilder()

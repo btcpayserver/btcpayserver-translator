@@ -76,7 +76,9 @@ public class LanguagePackValidator
                 
                 if (key.Equals("_maintainer", StringComparison.Ordinal))
                 {
-                    if (!TranslationValidationRules.IsValidMaintainerValue(value))
+                    var maintainerValue = property.Value?.Type == JTokenType.Null ? null : value;
+
+                    if (!TranslationValidationRules.IsValidMaintainerValue(maintainerValue))
                     {
                         issues.Add(new ValidationIssue(Path.GetFileName(filePath), key,
                             "Invalid _maintainer value (expected '<display name or handle>|<https URL>')"));

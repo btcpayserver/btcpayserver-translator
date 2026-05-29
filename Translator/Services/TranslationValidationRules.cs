@@ -276,11 +276,14 @@ internal static class TranslationValidationRules
     /// <summary>
     /// Validates the shape of the _maintainer field that ManifestGenerator expects
     /// </summary>
-    public static bool IsValidMaintainerValue(string value)
+    public static bool IsValidMaintainerValue(string? value)
     {
         // if language don't have maintainer
-        if (string.IsNullOrWhiteSpace(value))
+        if (value is null)
             return true;
+        
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
 
         return MaintainerFieldRegex.IsMatch(value.Trim());
     }
