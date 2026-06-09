@@ -75,7 +75,7 @@
   "A permission to the camera is needed to scan the QR code. Please grant the browser access and then retry.": "È necessario il permesso di accesso alla fotocamera per scansionare il codice QR. Si prega di concedere l'accesso al browser e riprovare.",
   "A Postgres compatible JSON Path (eg. $ ? (@.Customer.Name == \"John\"))": "Un JSON Path compatibile con Postgres (es. $ ? (@.Customer.Name == \"John\"))",
   "A self-hosted, open-source bitcoin payment processor.": "Un processore di pagamenti Bitcoin self-hosted e open-source.",
-  "Abort": "Abort",
+  "Abort": "Annulla",
   "Access to vault granted by owner.": "Accesso al caveau concesso dal proprietario.",
   "Access Tokens": "Token di accesso",
   "Access Type": "Tipo di Accesso",
