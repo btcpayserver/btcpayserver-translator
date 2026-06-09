@@ -1093,7 +1093,7 @@
   "Logout": "로그아웃",
   "Logs": "로그",
   "Mails": "메일",
-  "Maintainer": "관리자",
+  "Maintainer": "유지관리자",
   "Maintenance": "유지보수",
   "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.": "BTCPay Server 구성에서 적절하게 설정된 SSH 접근이 유지보수 기능에 필요합니다.",
   "Make Crowdfund Public": "크라우드펀드 공개하기",
