@@ -269,6 +269,175 @@ public class TranslationOrchestratorTests
         }
     }
 
+    [Fact]
+    public async Task RefreshKeysAsync_AddsMissingKeys_FromLocalSource_WithoutTranslating()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
+            var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
+
+            await fileWriter.WriteBackendTranslationFileAsync(
+                Path.Combine(tempDir, "french.json"),
+                SupportedLanguages.GetLanguageInfo("fr")!,
+                new Dictionary<string, string> { ["hello"] = "bonjour" });
+
+            var orchestrator = CreateOrchestrator(
+                extractor,
+                fileWriter,
+                new FakeTranslationService(),
+                new Dictionary<string, string?>
+                {
+                    ["Translation:OutputDirectory"] = tempDir,
+                    ["Translation:InputFile"] = inputFile
+                });
+
+            var result = await orchestrator.RefreshKeysAsync();
+
+            Assert.Equal(1, result.FilesProcessed);
+            Assert.Equal(1, result.TotalKeysAdded);
+            Assert.Equal(1, result.AddedByFile["french.json"]);
+
+            var written = await fileWriter.LoadExistingBackendTranslationsAsync(Path.Combine(tempDir, "french.json"));
+            Assert.Equal("bonjour", written["hello"]); // existing translation untouched
+            Assert.Equal("bye", written["bye"]);        // new key inserted as English placeholder
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task RefreshKeysAsync_SkipsUnknownLanguageFiles()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
+            var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
+
+            await fileWriter.WriteBackendTranslationFileAsync(
+                Path.Combine(tempDir, "french.json"),
+                SupportedLanguages.GetLanguageInfo("fr")!,
+                new Dictionary<string, string> { ["hello"] = "bonjour" });
+            await File.WriteAllTextAsync(Path.Combine(tempDir, "unknown.json"), "{\r\n  \"test\": \"test\"\r\n}");
+
+            var orchestrator = CreateOrchestrator(
+                extractor,
+                fileWriter,
+                new FakeTranslationService(),
+                new Dictionary<string, string?>
+                {
+                    ["Translation:OutputDirectory"] = tempDir,
+                    ["Translation:InputFile"] = inputFile
+                });
+
+            var result = await orchestrator.RefreshKeysAsync();
+
+            Assert.Equal(1, result.FilesProcessed);
+            Assert.Equal(1, result.FilesSkipped);
+            Assert.True(result.AddedByFile.ContainsKey("french.json"));
+            Assert.False(result.AddedByFile.ContainsKey("unknown.json"));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task RefreshKeysAsync_RespectsLanguageFilter()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
+            var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
+
+            await fileWriter.WriteBackendTranslationFileAsync(
+                Path.Combine(tempDir, "french.json"),
+                SupportedLanguages.GetLanguageInfo("fr")!,
+                new Dictionary<string, string> { ["hello"] = "bonjour" });
+            await fileWriter.WriteBackendTranslationFileAsync(
+                Path.Combine(tempDir, "german.json"),
+                SupportedLanguages.GetLanguageInfo("de")!,
+                new Dictionary<string, string> { ["hello"] = "hallo" });
+
+            var orchestrator = CreateOrchestrator(
+                extractor,
+                fileWriter,
+                new FakeTranslationService(),
+                new Dictionary<string, string?>
+                {
+                    ["Translation:OutputDirectory"] = tempDir,
+                    ["Translation:InputFile"] = inputFile
+                });
+
+            var result = await orchestrator.RefreshKeysAsync(new[] { "fr" });
+
+            Assert.Equal(1, result.FilesProcessed);
+            Assert.True(result.AddedByFile.ContainsKey("french.json"));
+            Assert.False(result.AddedByFile.ContainsKey("german.json"));
+
+            var german = await fileWriter.LoadExistingBackendTranslationsAsync(Path.Combine(tempDir, "german.json"));
+            Assert.False(german.ContainsKey("bye")); // untouched
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task RefreshKeysAsync_IsIdempotent_SecondRunAddsZero()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
+            var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
+
+            await fileWriter.WriteBackendTranslationFileAsync(
+                Path.Combine(tempDir, "french.json"),
+                SupportedLanguages.GetLanguageInfo("fr")!,
+                new Dictionary<string, string> { ["hello"] = "bonjour" });
+
+            var orchestrator = CreateOrchestrator(
+                extractor,
+                fileWriter,
+                new FakeTranslationService(),
+                new Dictionary<string, string?>
+                {
+                    ["Translation:OutputDirectory"] = tempDir,
+                    ["Translation:InputFile"] = inputFile
+                });
+
+            var first = await orchestrator.RefreshKeysAsync();
+            var second = await orchestrator.RefreshKeysAsync();
+
+            Assert.Equal(1, first.TotalKeysAdded);
+            Assert.Equal(0, second.TotalKeysAdded);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
     private static TranslationOrchestrator CreateOrchestrator(
         TranslationExtractor extractor,
         FileWriter fileWriter,

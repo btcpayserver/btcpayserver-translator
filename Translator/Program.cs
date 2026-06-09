@@ -47,6 +47,7 @@ class Program
             CreateUpdateCommand(serviceProvider),
             CreateBatchUpdateCommand(serviceProvider),
             CreateUpdateAllCommand(serviceProvider),
+            CreateRefreshKeysCommand(serviceProvider),
             CreateValidatePacksCommand(serviceProvider),
             CreateGenerateManifestCommand(serviceProvider)
         };
@@ -88,6 +89,12 @@ class Program
     {
         if (!string.IsNullOrWhiteSpace(btcpayUrl))
             sp.GetRequiredService<IConfiguration>()["Translation:BTCPayUrl"] = btcpayUrl;
+    }
+
+    private static void ApplyInputFile(IServiceProvider sp, string? sourceFile)
+    {
+        if (!string.IsNullOrWhiteSpace(sourceFile))
+            sp.GetRequiredService<IConfiguration>()["Translation:InputFile"] = sourceFile;
     }
 
     private static Command CreateTranslateCommand(ServiceProvider serviceProvider)
@@ -417,6 +424,65 @@ class Program
                 Environment.Exit(1);
             }
         }, continueOnErrorOption, btcpayUrlOption);
+
+        return command;
+    }
+
+    private static Command CreateRefreshKeysCommand(ServiceProvider serviceProvider)
+    {
+        var sourceFileOption = new Option<string?>(
+            "--source-file",
+            "Path to a local BTCPay Translations.Default.cs (or its JSON). When set, source keys are read " +
+            "from this file instead of downloading from GitHub. Overrides the configured InputFile.")
+        {
+            IsRequired = false
+        };
+
+        var languagesOption = new Option<string[]>(
+            "--languages",
+            "Optional language codes to limit the refresh to (e.g. 'fr es'). Omit to refresh all files.")
+        {
+            IsRequired = false,
+            AllowMultipleArgumentsPerToken = true
+        };
+
+        var btcpayUrlOption = CreateBTCPayUrlOption();
+
+        var command = new Command(
+            "refresh-keys",
+            "Insert newly-added English source keys into existing translation files as English placeholders " +
+            "(insert-only, no AI/OpenRouter, preserves existing lines).")
+        {
+            sourceFileOption,
+            btcpayUrlOption,
+            languagesOption
+        };
+
+        command.SetHandler(async (sourceFile, btcpayUrl, languages) =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            ApplyBTCPayUrl(scope.ServiceProvider, btcpayUrl);
+            ApplyInputFile(scope.ServiceProvider, sourceFile);
+
+            var orchestrator = scope.ServiceProvider.GetRequiredService<TranslationOrchestrator>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            if (!string.IsNullOrWhiteSpace(btcpayUrl) && !string.IsNullOrWhiteSpace(sourceFile))
+                logger.LogWarning("Both --btcpay-url and --source-file were provided; --btcpay-url takes precedence.");
+
+            var codes = languages is { Length: > 0 } ? languages : null;
+            var result = await orchestrator.RefreshKeysAsync(codes);
+
+            logger.LogInformation(
+                "Refresh completed: {TotalKeysAdded} key(s) added across {FilesProcessed} file(s) ({FilesSkipped} skipped).",
+                result.TotalKeysAdded, result.FilesProcessed, result.FilesSkipped);
+
+            if (result.FilesProcessed == 0)
+            {
+                logger.LogError("No translation files found to refresh.");
+                Environment.Exit(1);
+            }
+        }, sourceFileOption, btcpayUrlOption, languagesOption);
 
         return command;
     }

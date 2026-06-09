@@ -114,6 +114,31 @@ dotnet run -- update-all --continue-on-error
 
 This is useful when BTCPayServer adds new features and strings. Instead of retranslating everything, you can just update with the new additions.
 
+### Refresh Keys Without Translating (placeholders)
+
+If you just want to add the newly-added English keys to your translation files as placeholders (to translate later, by hand or with `update`), use `refresh-keys`. Unlike `update`, it does **not** call the AI service and does **not** require an OpenRouter API key.
+
+```bash
+# Refresh all translation files from a LOCAL source file (no download)
+dotnet run -- refresh-keys --source-file ../btcpayserver/BTCPayServer/Services/Translations.Default.cs
+
+# Refresh only specific languages
+dotnet run -- refresh-keys --source-file ./Translations.Default.cs --languages fr es de
+
+# Refresh from a running BTCPay Server (includes the DI-registered strings)
+dotnet run -- refresh-keys --btcpay-url http://localhost:14142
+
+# Without --source-file / --btcpay-url it falls back to the configured InputFile (GitHub)
+dotnet run -- refresh-keys
+```
+
+**How `refresh-keys` differs from `update`:**
+- **No AI / no API key** - new keys are inserted with the English text as a placeholder value.
+- **Insert-only** - it never removes keys (so DI-registered strings not present in the static source are kept). It only adds keys that are missing.
+- **Byte-preserving** - existing entries (including `_maintainer`/`_source` metadata, ordering, and formatting) are left untouched; only new lines are added. Re-running it is a no-op once everything is present.
+
+Options: `--source-file <path>` (local file, overrides the configured InputFile), `--btcpay-url <url>` (takes precedence over `--source-file`), `--languages <codes>` (optional filter; omit to refresh all files).
+
 ## Fetching Translations from a Running BTCPay Server
 
 By default the tool fetches strings by parsing `Translations.Default.cs` from GitHub. However, some strings are registered via Dependency Injection (by plugins, payment methods, etc.) and do not appear in that file.

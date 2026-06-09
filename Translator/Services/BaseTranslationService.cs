@@ -16,7 +16,7 @@ public class BaseTranslationService : ITranslationService, IDisposable
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<BaseTranslationService> _logger;
-    private readonly string _apiKey;
+    private readonly string? _apiKey;
     private readonly string _model;
     private readonly SemaphoreSlim _semaphore;
     private readonly TimeProvider _timeProvider;
@@ -28,10 +28,11 @@ public class BaseTranslationService : ITranslationService, IDisposable
         _httpClient = httpClient;
         _logger = logger;
 
-        // Get API key from environment variable
+        // Get API key from environment variable. Resolved lazily: construction must not require it,
+        // so commands that never translate (e.g. refresh-keys) can run without OpenRouter configured.
+        // The check is enforced at point of use in EnsureApiKeyConfigured().
         _apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") ??
-                 configuration["TranslationService:OpenRouter:ApiKey"] ??
-                 throw new ArgumentException("OpenRouter API key not found. Set OPENROUTER_API_KEY environment variable.");
+                 configuration["TranslationService:OpenRouter:ApiKey"];
 
         _model = Environment.GetEnvironmentVariable("OPENROUTER_MODEL") ??
                 configuration["TranslationService:OpenRouter:Model"] ??
@@ -45,8 +46,15 @@ public class BaseTranslationService : ITranslationService, IDisposable
         _logger.LogInformation("Fast Translation Service initialized - Model: {Model}", _model);
     }
 
+    private void EnsureApiKeyConfigured()
+    {
+        if (string.IsNullOrEmpty(_apiKey))
+            throw new ArgumentException("OpenRouter API key not found. Set OPENROUTER_API_KEY environment variable.");
+    }
+
     public async Task<TranslationResponse> TranslateAsync(TranslationRequest request)
     {
+        EnsureApiKeyConfigured();
         var maxRetries = 3;
         // Only switch into strict-retry prompting when the *prior* attempt produced an LLM
         // answer that failed our output validation - not for HTTP errors, HTML-error bodies,
@@ -174,6 +182,7 @@ public class BaseTranslationService : ITranslationService, IDisposable
 
     public async Task<BatchTranslationResponse> TranslateBatchAsync(BatchTranslationRequest request)
     {
+        EnsureApiKeyConfigured();
         var startTime = DateTime.UtcNow;
         var results = new List<TranslationResponse>();
 

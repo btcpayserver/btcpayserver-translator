@@ -142,6 +142,46 @@ public class CliTests
         }
     }
 
+    [Fact]
+    public async Task RefreshKeys_InsertsMissingKeys_FromLocalSourceFile_AndReturnsZero()
+    {
+        var outputDirectory = CreateTempDirectory();
+        var inputFile = CreateKnownTranslationsInputFile();
+        var frenchFile = Path.Combine(outputDirectory, "french.json");
+
+        try
+        {
+            await File.WriteAllTextAsync(frenchFile, "{\r\n  \"existing\": \"valeur\"\r\n}");
+
+            var result = await CliTestHost.RunAsync(
+                ["refresh-keys", "--source-file", inputFile],
+                new Dictionary<string, string?>
+                {
+                    ["Translation__OutputDirectory"] = outputDirectory,
+                    ["OPENROUTER_API_KEY"] = "" // refresh-keys must work without OpenRouter configured
+                });
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("Refresh completed", result.CombinedOutput);
+
+            var written = await File.ReadAllTextAsync(frenchFile);
+            Assert.Contains("\"hello\"", written);                 // new source key inserted
+            Assert.Contains("\"existing\": \"valeur\"", written);  // existing entry untouched
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+
+            if (File.Exists(inputFile))
+            {
+                File.Delete(inputFile);
+            }
+        }
+    }
+
     private static string CreateTempDirectory()
     {
         var directory = Path.Combine(Path.GetTempPath(), "BTCPayTranslator.CliTests", Guid.NewGuid().ToString("N"));
