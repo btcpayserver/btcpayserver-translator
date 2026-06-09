@@ -5,8 +5,24 @@
     <File Path=".github/workflows/manifest.yml" />
   </Folder>
   <Folder Name="/translations/">
-    <File Path="translations/**" />
+    <File Path="translations/dutch.json" />
+    <File Path="translations/french.json" />
+    <File Path="translations/german.json" />
+    <File Path="translations/hindi.json" />
+    <File Path="translations/indonesian.json" />
+    <File Path="translations/italian.json" />
+    <File Path="translations/japanese.json" />
+    <File Path="translations/korean.json" />
+    <File Path="translations/norwegian.json" />
+    <File Path="translations/portuguese (brazil).json" />
+    <File Path="translations/romanian.json" />
+    <File Path="translations/russian.json" />
+    <File Path="translations/serbian.json" />
+    <File Path="translations/spanish.json" />
+    <File Path="translations/thai.json" />
+    <File Path="translations/turkish.json" />
   </Folder>
   <Project Path="Translator.Tests/BTCPayTranslator.Tests.csproj" />
   <Project Path="Translator/BTCPayTranslator.csproj" />
 </Solution>
+
