@@ -13,6 +13,7 @@ permissions:
 jobs:
   manifest-generation:
     runs-on: ubuntu-latest
+    if: github.repository == 'btcpayserver/btcpayserver-translator'
     env:
       CI: true
       
