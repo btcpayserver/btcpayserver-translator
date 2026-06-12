@@ -42,6 +42,13 @@ OPENROUTER_APP_NAME=https://github.com/btcpayserver/btcpayserver
 
 ## Usage
 
+**Run from the `Translator/` directory.** All commands below assume your shell's
+working directory is `Translator/`:
+
+```bash
+cd Translator && dotnet run -- <command>
+```
+
 ### List Available Languages
 ```bash
 dotnet run -- list-languages
@@ -194,7 +201,7 @@ The tool supports 100+ languages including:
     "MaxRetries": 3,
     "DelayBetweenRequests": 1000,
     "InputFile": "https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/Services/Translations.Default.cs",
-    "OutputDirectory": "translations",
+    "OutputDirectory": "../translations",
     "BTCPayUrl": ""
   }
 }
