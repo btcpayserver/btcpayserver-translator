@@ -141,6 +141,16 @@
       "Updated": "2026-06-15T10:36:23Z"
     },
     {
+      "Code": "sw",
+      "Bcp47": "sw",
+      "Name": "Swahili",
+      "Native": "Kiswahili",
+      "File": "translations/swahili.json",
+      "Sha": "939156652b566f02f144df3c10f223a966933d2ebee110ecac69a28142c14b3d",
+      "Maintainer": "comwanga|https://github.com/comwanga",
+      "Updated": "2026-06-17T07:32:44Z"
+    },
+    {
       "Code": "th",
       "Bcp47": "th-TH",
       "Name": "Thai",
