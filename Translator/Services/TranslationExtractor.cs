@@ -31,8 +31,24 @@ public class TranslationExtractor
         var url = btcpayUrl.TrimEnd('/') + "/cheat/translations/default-en";
         try
         {
-            _logger.LogInformation("Fetching translations from BTCPay Server at {Url}", url);
-            var response = await _httpClient.GetAsync(url);
+            Uri uri = new(url, UriKind.Absolute);
+            HttpResponseMessage response;
+            if((uri.Host == "localhost" || uri.Host == "127.0.0.1") && uri.Scheme == "https")
+            {
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
+
+                _logger.LogInformation("Fetching translations from BTCPay Server at {Url}", url);
+                var client = new HttpClient(handler);
+                response = await client.GetAsync(url);
+            }
+            else
+            {
+                _logger.LogInformation("Fetching translations from BTCPay Server at {Url}", url);
+                response = await _httpClient.GetAsync(url);
+            }
 
             if (!response.IsSuccessStatusCode)
             {
