@@ -43,7 +43,6 @@ public class TranslationExtractor
                 _logger.LogInformation("Fetching translations from BTCPay Server at {Url}", url);
                 var client = new HttpClient(handler);
                 response = await client.GetAsync(url);
-                client.Dispose();
             }
             else
             {
