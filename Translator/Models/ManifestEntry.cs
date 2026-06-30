@@ -8,6 +8,7 @@ public record ManifestEntry(
     string Bcp47, // "fr-FR"
     string Name, // "French"
     string Native, // "Français"
+    bool Rtl, // right-to-left indicator
     string File, // "translations/french.json"
     string Sha, // "abc123..."
     string? Maintainer, // "teamssUTXO|https://github.com/teamssUTXO"

@@ -44,6 +44,45 @@ public class ManifestGeneratorTests
             Assert.Equal("alice|https://github.com/alice", entry.Maintainer);
             Assert.Equal(ComputeSha256(translationFile), entry.Sha);
             Assert.Matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", entry.Updated);
+            Assert.False(entry.Rtl);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task GenerateManifest_SetsRtlTrue_ForRightToLeftLanguage()
+    {
+        var tempDir = CreateTempDirectory();
+        var translationsDir = Path.Combine(tempDir, "translations");
+        Directory.CreateDirectory(translationsDir);
+        var translationFile = Path.Combine(translationsDir, "Arabic.json");
+        var manifestPath = Path.Combine(tempDir, "manifest.json");
+
+        try
+        {
+            await File.WriteAllTextAsync(translationFile, """
+                {
+                  "_maintainer": "omar|https://github.com/omar",
+                  "hello": "مرحبا"
+                }
+                """);
+
+            var sut = CreateSut();
+            var result = await sut.GenerateManifest(translationsDir, manifestPath);
+
+            Assert.True(result);
+            var manifest = await ReadManifest(manifestPath);
+            var entry = Assert.Single(manifest.Languages);
+
+            Assert.Equal("ar", entry.Code);
+            Assert.Equal("Arabic", entry.Name);
+            Assert.True(entry.Rtl);
         }
         finally
         {
@@ -118,6 +157,7 @@ public class ManifestGeneratorTests
                         Bcp47: "fr-FR",
                         Name: "French",
                         Native: "Français",
+                        Rtl: false,
                         File: "translations/French.json",
                         Sha: existingSha,
                         Maintainer: "old",
@@ -171,6 +211,7 @@ public class ManifestGeneratorTests
                         Bcp47: "fr-FR",
                         Name: "French",
                         Native: "Français",
+                        Rtl: false,
                         File: "translations/French.json",
                         Sha: "deadbeef",
                         Maintainer: "old",

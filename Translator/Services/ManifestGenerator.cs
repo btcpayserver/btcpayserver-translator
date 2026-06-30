@@ -103,6 +103,7 @@ public class ManifestGenerator
                 Bcp47: langInfo.Code,
                 Name: langInfo.Name,
                 Native: langInfo.NativeName,
+                Rtl: langInfo.IsRightToLeft,
                 File: "translations/" + fileName + ".json",
                 Sha: hashedFile,
                 Maintainer: maintainer,
