@@ -106,10 +106,15 @@ public class BaseTranslationService : ITranslationService, IDisposable
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    if (attempt == maxRetries)
+                    var isPermissionError = response.StatusCode is
+                        System.Net.HttpStatusCode.BadRequest or
+                        System.Net.HttpStatusCode.Unauthorized or
+                        System.Net.HttpStatusCode.PaymentRequired or
+                        System.Net.HttpStatusCode.NotFound;
+                    if (attempt == maxRetries || isPermissionError)
                     {
                         return new TranslationResponse(request.Key, string.Empty, false,
-                            $"API error: {response.StatusCode}");
+                            $"API error: {response.StatusCode} - {responseContent}");
                     }
                     await Task.Delay(TimeSpan.FromSeconds(1), _timeProvider); // Quick retry delay
                     continue;
