@@ -43,13 +43,12 @@ public class FileWriterTests
     }
 
     [Fact]
-    public async Task LoadExistingBackendTranslationsAsync_ReturnsEmpty_OnMissingFile()
+    public async Task LoadExistingBackendTranslationsAsync_Throws_OnMissingFile()
     {
         var sut = new FileWriter(NullLogger<FileWriter>.Instance);
 
-        var result = await sut.LoadExistingBackendTranslationsAsync(Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json"));
-
-        Assert.Empty(result);
+        await Assert.ThrowsAsync<FileNotFoundException>(() =>
+            sut.LoadExistingBackendTranslationsAsync(Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json")));
     }
 
     [Fact]

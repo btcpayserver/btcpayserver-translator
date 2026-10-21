@@ -1,9 +1,74 @@
+using BTCPayTranslator.Tests.Services;
 using Xunit;
 
 namespace BTCPayTranslator.Tests.CLI;
 
 public class CliTests
 {
+    [Theory]
+    [InlineData("update", LoadSafetyFixture.Malformed)]
+    [InlineData("update", "")]
+    [InlineData("batch-update", LoadSafetyFixture.Malformed)]
+    [InlineData("batch-update", "")]
+    [InlineData("update-all", LoadSafetyFixture.Malformed)]
+    [InlineData("update-all", "")]
+    public async Task UpdateCommands_OnLoadFailure_ReturnNonZeroAndPreserveBytes(string command, string content)
+    {
+        // No new source keys: even an unfixed implementation cannot call a translation API.
+        using var fixture = new LoadSafetyFixture(source: "{}");
+        var original = fixture.WritePack(content);
+        var healthyPath = Path.Combine(fixture.OutputDirectory, "french.json");
+        await File.WriteAllTextAsync(healthyPath, "{}");
+        var arguments = command switch
+        {
+            "update" => new[] { command, "--language", "sw" },
+            "batch-update" => new[] { command, "--languages", "sw", "fr", "--continue-on-error" },
+            _ => new[] { command, "--continue-on-error" }
+        };
+
+        var result = await CliTestHost.RunAsync(arguments, new Dictionary<string, string?>
+        {
+            ["Translation__OutputDirectory"] = fixture.OutputDirectory,
+            ["Translation__InputFile"] = fixture.SourceFile,
+            ["Translation__BTCPayUrl"] = ""
+        });
+
+        Assert.NotEqual(0, result.ExitCode);
+        Assert.Contains("Error during update process for language sw", result.CombinedOutput);
+        Assert.Contains("JsonReaderException", result.CombinedOutput);
+        Assert.DoesNotContain("Translating", result.CombinedOutput);
+        Assert.DoesNotContain("writing backend translation", result.CombinedOutput, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("wrote", result.CombinedOutput);
+        Assert.Equal(original, File.ReadAllBytes(fixture.PackPath));
+        Assert.Equal("{}", await File.ReadAllTextAsync(healthyPath));
+    }
+
+    [Theory]
+    [InlineData("update")]
+    [InlineData("batch-update")]
+    [InlineData("update-all")]
+    public async Task UpdateCommands_WithValidEmptyPack_ReturnZero(string command)
+    {
+        using var fixture = new LoadSafetyFixture(source: "{}");
+        var original = fixture.WritePack("{}");
+        var arguments = command switch
+        {
+            "update" => new[] { command, "--language", "sw" },
+            "batch-update" => new[] { command, "--languages", "sw" },
+            _ => new[] { command }
+        };
+
+        var result = await CliTestHost.RunAsync(arguments, new Dictionary<string, string?>
+        {
+            ["Translation__OutputDirectory"] = fixture.OutputDirectory,
+            ["Translation__InputFile"] = fixture.SourceFile,
+            ["Translation__BTCPayUrl"] = ""
+        });
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal(original, File.ReadAllBytes(fixture.PackPath));
+    }
+
     [Fact]
     public async Task ListLanguages_ReturnsZero_AndPrintsKnownLanguage()
     {
