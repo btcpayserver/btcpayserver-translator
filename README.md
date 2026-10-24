@@ -112,7 +112,14 @@ dotnet run -- update-all --continue-on-error
 - **Only translates new strings** that were added (e.g., if you have 2000 strings and GitHub has 2015, only 15 new strings are translated)
 - Removes strings that were deleted from the source
 - Preserves all existing translations
-- Maintains the same order as the source file
+- Preserves pack metadata (keys starting with `_`, such as `_maintainer` and `_source`) at the top of the file
+- Writes translations in sorted key order
+
+**Safety checks:** an update fails (non-zero exit) and leaves the file untouched when:
+- the source contains no strings, or
+- the source is missing more than 10% of the pack's existing strings. This usually means the source is incomplete (for example, the static catalog omits DI-registered strings) rather than that those strings were deleted. If the removals are intended, raise the limit with `Translation:MaxPruneRatio` (e.g. `Translation__MaxPruneRatio=0.5`; `1` disables the check).
+
+If some new strings fail to translate, the successful ones are still written, but nothing is removed that run and the command exits non-zero. Re-run it to pick up the rest.
 
 **When to Use:**
 - `update` - Update a single language

@@ -202,110 +202,13 @@ public class TranslationOrchestrator
                 return false;
             }
 
-            _logger.LogInformation("Starting update for {Language} ({NativeName})", 
+            _logger.LogInformation("Starting update for {Language} ({NativeName})",
                 languageInfo.Name, languageInfo.NativeName);
 
             var sourceTranslations = await GetSourceTranslationsAsync();
             _logger.LogInformation("Found {Count} strings in source", sourceTranslations.Count);
 
-            // Determine output path
-            var outputDir = _configuration["Translation:OutputDirectory"] ?? "translations";
-            var outputPath = Path.Combine(outputDir, $"{languageInfo.Name.ToLower()}.json");
-
-            // Load existing translations
-            if (!File.Exists(outputPath))
-            {
-                _logger.LogError("Translation file not found: {OutputPath}. Use 'translate' command to create it first.", outputPath);
-                return false;
-            }
-
-            var existingTranslations = await _fileWriter.LoadExistingBackendTranslationsAsync(outputPath);
-            _logger.LogInformation("Loaded {Count} existing translations", existingTranslations.Count);
-
-            // Find what's new, what's deleted, and what's unchanged
-            var newKeys = sourceTranslations.Keys.Except(existingTranslations.Keys).ToList();
-            var deletedKeys = existingTranslations.Keys.Except(sourceTranslations.Keys).ToList();
-            var unchangedKeys = existingTranslations.Keys.Intersect(sourceTranslations.Keys).ToList();
-
-            _logger.LogInformation("Analysis: {NewCount} new strings, {DeletedCount} deleted strings, {UnchangedCount} unchanged strings",
-                newKeys.Count, deletedKeys.Count, unchangedKeys.Count);
-
-            if (newKeys.Count == 0 && deletedKeys.Count == 0)
-            {
-                _logger.LogInformation("No updates needed. Translation file is up to date.");
-                return true;
-            }
-
-            // Translate only new strings
-            var translationsToProcess = newKeys.ToDictionary(k => k, k => sourceTranslations[k]);
-            
-            if (translationsToProcess.Count > 0)
-            {
-                _logger.LogInformation("Translating {Count} new strings...", translationsToProcess.Count);
-
-                var batchSize = _configuration.GetValue<int>("Translation:BatchSize", 50);
-                var requests = translationsToProcess
-                    .Select(t => new TranslationRequest(t.Key, t.Value, languageInfo.Name))
-                    .ToList();
-
-                var allResults = new List<TranslationResponse>();
-                for (int i = 0; i < requests.Count; i += batchSize)
-                {
-                    var batch = requests.Skip(i).Take(batchSize).ToList();
-                    _logger.LogInformation("Processing batch {CurrentBatch}/{TotalBatches} ({Count} items)", 
-                        (i / batchSize) + 1, (int)Math.Ceiling((double)requests.Count / batchSize), batch.Count);
-
-                    var batchRequest = new BatchTranslationRequest(batch, languageInfo.Name, languageInfo.NativeName);
-                    var batchResponse = await _translationService.TranslateBatchAsync(batchRequest);
-                    allResults.AddRange(batchResponse.Results);
-
-                    if (i + batchSize < requests.Count)
-                    {
-                        var delay = _configuration.GetValue<int>("Translation:DelayBetweenRequests", 1000);
-                        await Task.Delay(delay);
-                    }
-                }
-
-                var newTranslations = allResults
-                    .Where(r => r.Success)
-                    .ToDictionary(r => r.Key, r => r.TranslatedText);
-
-                _logger.LogInformation("Successfully translated {SuccessCount}/{TotalCount} new strings",
-                    newTranslations.Count, translationsToProcess.Count);
-
-                // Merge new translations with existing ones
-                foreach (var newTranslation in newTranslations)
-                {
-                    existingTranslations[newTranslation.Key] = newTranslation.Value;
-                }
-            }
-
-            // Remove deleted keys
-            foreach (var deletedKey in deletedKeys)
-            {
-                existingTranslations.Remove(deletedKey);
-                _logger.LogDebug("Removed deleted key: {Key}", deletedKey);
-            }
-
-            // Rebuild the final dictionary in the same order as source
-            var finalTranslations = new Dictionary<string, string>();
-            foreach (var sourceKey in sourceTranslations.Keys)
-            {
-                if (existingTranslations.ContainsKey(sourceKey))
-                {
-                    finalTranslations[sourceKey] = existingTranslations[sourceKey];
-                }
-            }
-
-            // Write updated translation file
-            await _fileWriter.WriteBackendTranslationFileAsync(
-                outputPath, languageInfo, finalTranslations);
-
-            _logger.LogInformation(
-                "Update completed for {Language}: {TotalCount} total strings ({NewCount} added, {DeletedCount} removed)",
-                languageInfo.Name, finalTranslations.Count, newKeys.Count, deletedKeys.Count);
-
-            return true;
+            return await UpdateLanguageWithSourceAsync(languageCode, sourceTranslations);
         }
         catch (Exception ex)
         {
@@ -474,12 +377,28 @@ public class TranslationOrchestrator
 
             if (!File.Exists(outputPath))
             {
-                _logger.LogError("Translation file not found: {OutputPath}", outputPath);
+                _logger.LogError("Translation file not found: {OutputPath}. Use 'translate' command to create it first.", outputPath);
+                return false;
+            }
+
+            // An empty source would prune every translation; treat it as a broken source, not as "everything was deleted".
+            if (sourceTranslations.Count == 0)
+            {
+                _logger.LogError("Source contains no translation keys; refusing to update {Language}", languageInfo.Name);
                 return false;
             }
 
             var existingTranslations = await _fileWriter.LoadExistingBackendTranslationsAsync(outputPath);
             _logger.LogInformation("Loaded {Count} existing translations for {Language}", existingTranslations.Count, languageInfo.Name);
+
+            // Pack metadata (_maintainer, _source, ...) is not a translation, so the source can never make it obsolete.
+            var metadata = existingTranslations
+                .Where(e => IsMetadataKey(e.Key) && !sourceTranslations.ContainsKey(e.Key))
+                .ToList();
+            foreach (var entry in metadata)
+            {
+                existingTranslations.Remove(entry.Key);
+            }
 
             var newKeys = sourceTranslations.Keys.Except(existingTranslations.Keys).ToList();
             var deletedKeys = existingTranslations.Keys.Except(sourceTranslations.Keys).ToList();
@@ -493,22 +412,32 @@ public class TranslationOrchestrator
                 return true;
             }
 
-            var translationsToProcess = newKeys.ToDictionary(k => k, k => sourceTranslations[k]);
-            
-            if (translationsToProcess.Count > 0)
+            // A source missing a large share of the pack is more likely incomplete (static catalog without
+            // DI-registered strings, truncated download, ...) than evidence that those strings were removed.
+            var maxPruneRatio = _configuration.GetValue<double>("Translation:MaxPruneRatio", 0.1);
+            if (existingTranslations.Count > 0 && (double)deletedKeys.Count / existingTranslations.Count > maxPruneRatio)
             {
-                _logger.LogInformation("Translating {Count} new strings for {Language}...", translationsToProcess.Count, languageInfo.Name);
+                _logger.LogError(
+                    "Refusing to prune {DeletedCount}/{ExistingCount} strings from {Language} (limit {MaxPruneRatio:P0}); the source may be incomplete. Raise Translation:MaxPruneRatio if these removals are intended.",
+                    deletedKeys.Count, existingTranslations.Count, languageInfo.Name, maxPruneRatio);
+                return false;
+            }
+
+            var allNewKeysTranslated = true;
+            if (newKeys.Count > 0)
+            {
+                _logger.LogInformation("Translating {Count} new strings for {Language}...", newKeys.Count, languageInfo.Name);
 
                 var batchSize = _configuration.GetValue<int>("Translation:BatchSize", 50);
-                var requests = translationsToProcess
-                    .Select(t => new TranslationRequest(t.Key, t.Value, languageInfo.Name))
+                var requests = newKeys
+                    .Select(k => new TranslationRequest(k, sourceTranslations[k], languageInfo.Name))
                     .ToList();
 
                 var allResults = new List<TranslationResponse>();
                 for (int i = 0; i < requests.Count; i += batchSize)
                 {
                     var batch = requests.Skip(i).Take(batchSize).ToList();
-                    _logger.LogInformation("Processing batch {CurrentBatch}/{TotalBatches} ({Count} items)", 
+                    _logger.LogInformation("Processing batch {CurrentBatch}/{TotalBatches} ({Count} items)",
                         (i / batchSize) + 1, (int)Math.Ceiling((double)requests.Count / batchSize), batch.Count);
 
                     var batchRequest = new BatchTranslationRequest(batch, languageInfo.Name, languageInfo.NativeName);
@@ -527,36 +456,40 @@ public class TranslationOrchestrator
                     .ToDictionary(r => r.Key, r => r.TranslatedText);
 
                 _logger.LogInformation("Successfully translated {SuccessCount}/{TotalCount} new strings for {Language}",
-                    newTranslations.Count, translationsToProcess.Count, languageInfo.Name);
+                    newTranslations.Count, newKeys.Count, languageInfo.Name);
 
                 foreach (var newTranslation in newTranslations)
                 {
                     existingTranslations[newTranslation.Key] = newTranslation.Value;
                 }
+
+                allNewKeysTranslated = newKeys.All(newTranslations.ContainsKey);
             }
 
-            foreach (var deletedKey in deletedKeys)
+            // A run with failed translations is incomplete, so it must not also decide what is obsolete.
+            if (allNewKeysTranslated)
             {
-                existingTranslations.Remove(deletedKey);
-            }
-
-            var finalTranslations = new Dictionary<string, string>();
-            foreach (var sourceKey in sourceTranslations.Keys)
-            {
-                if (existingTranslations.ContainsKey(sourceKey))
+                foreach (var deletedKey in deletedKeys)
                 {
-                    finalTranslations[sourceKey] = existingTranslations[sourceKey];
+                    existingTranslations.Remove(deletedKey);
+                    _logger.LogDebug("Removed deleted key: {Key}", deletedKey);
                 }
+            }
+            else
+            {
+                _logger.LogWarning("{Language}: some new strings failed to translate; keeping {DeletedCount} strings that would have been removed",
+                    languageInfo.Name, deletedKeys.Count);
             }
 
             await _fileWriter.WriteBackendTranslationFileAsync(
-                outputPath, languageInfo, finalTranslations);
+                outputPath, languageInfo, existingTranslations, metadata);
 
             _logger.LogInformation(
-                "{Language} updated: {TotalCount} total strings ({NewCount} added, {DeletedCount} removed)",
-                languageInfo.Name, finalTranslations.Count, newKeys.Count, deletedKeys.Count);
+                "{Language} updated: {TotalCount} total strings ({AddedCount} added, {RemovedCount} removed)",
+                languageInfo.Name, existingTranslations.Count, newKeys.Count(existingTranslations.ContainsKey),
+                allNewKeysTranslated ? deletedKeys.Count : 0);
 
-            return true;
+            return allNewKeysTranslated;
         }
         catch (Exception ex)
         {
@@ -564,6 +497,8 @@ public class TranslationOrchestrator
             return false;
         }
     }
+
+    private static bool IsMetadataKey(string key) => key.StartsWith('_');
 
     /// <summary>
     /// Inserts newly-added English source keys into existing translation files as English placeholders,

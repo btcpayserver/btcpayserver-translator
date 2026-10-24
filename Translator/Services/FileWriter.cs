@@ -73,12 +73,19 @@ public class FileWriter
     public async Task WriteBackendTranslationFileAsync(
         string outputPath,
         LanguageInfo languageInfo,
-        Dictionary<string, string> translations)
+        Dictionary<string, string> translations,
+        IEnumerable<KeyValuePair<string, string>>? metadata = null)
     {
         try
         {
             // Create the backend translation file structure (simple JSON)
             var translationFile = new JObject();
+
+            // Pack metadata (e.g. _maintainer, _source) goes first, in the order given
+            foreach (var entry in metadata ?? [])
+            {
+                translationFile[entry.Key] = entry.Value;
+            }
 
             // Add all translations
             foreach (var translation in translations.OrderBy(t => t.Key, StringComparer.Ordinal))

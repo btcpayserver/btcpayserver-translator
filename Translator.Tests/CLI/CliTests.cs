@@ -57,6 +57,80 @@ public class CliTests
     }
 
     [Fact]
+    public async Task Update_WithEmptySource_ReturnsNonZero_AndLeavesPackUnchanged()
+    {
+        var outputDirectory = CreateTempDirectory();
+        var inputFile = CreateKnownTranslationsInputFile("{}");
+        var packPath = Path.Combine(outputDirectory, "french.json");
+        try
+        {
+            await File.WriteAllTextAsync(packPath, "{\n  \"_maintainer\": \"Reviewer|https://example.org/reviewer\",\n  \"hello\": \"bonjour\"\n}");
+            var originalBytes = await File.ReadAllBytesAsync(packPath);
+
+            var result = await CliTestHost.RunAsync(
+                ["update", "--language", "fr"],
+                new Dictionary<string, string?>
+                {
+                    ["Translation__OutputDirectory"] = outputDirectory,
+                    ["Translation__InputFile"] = inputFile
+                });
+
+            Assert.NotEqual(0, result.ExitCode);
+            Assert.Contains("Source contains no translation keys", result.CombinedOutput);
+            Assert.Equal(originalBytes, await File.ReadAllBytesAsync(packPath));
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+
+            if (File.Exists(inputFile))
+            {
+                File.Delete(inputFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task UpdateAll_WhenPruneExceedsThreshold_ReturnsNonZero_AndLeavesPackUnchanged()
+    {
+        var outputDirectory = CreateTempDirectory();
+        var inputFile = CreateKnownTranslationsInputFile();
+        var packPath = Path.Combine(outputDirectory, "french.json");
+        try
+        {
+            await File.WriteAllTextAsync(packPath, "{\n  \"_maintainer\": \"Reviewer|https://example.org/reviewer\",\n  \"hello\": \"bonjour\",\n  \"RuntimeOnly\": \"Traduction de plugin\"\n}");
+            var originalBytes = await File.ReadAllBytesAsync(packPath);
+
+            var result = await CliTestHost.RunAsync(
+                ["update-all"],
+                new Dictionary<string, string?>
+                {
+                    ["Translation__OutputDirectory"] = outputDirectory,
+                    ["Translation__InputFile"] = inputFile
+                });
+
+            Assert.NotEqual(0, result.ExitCode);
+            Assert.Contains("Refusing to prune", result.CombinedOutput);
+            Assert.Equal(originalBytes, await File.ReadAllBytesAsync(packPath));
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+
+            if (File.Exists(inputFile))
+            {
+                File.Delete(inputFile);
+            }
+        }
+    }
+
+    [Fact]
     public async Task UpdateAll_WhenNoTranslationFilesFound_ReturnsNonZero()
     {
         var outputDirectory = CreateTempDirectory();
@@ -189,7 +263,7 @@ public class CliTests
         return directory;
     }
 
-    private static string CreateKnownTranslationsInputFile()
+    private static string CreateKnownTranslationsInputFile(string json = "{\n  \"hello\": \"Hello\"\n}")
     {
         var path = Path.Combine(Path.GetTempPath(), "BTCPayTranslator.CliTests", Guid.NewGuid().ToString("N") + ".cs");
         var parent = Path.GetDirectoryName(path)!;
@@ -200,9 +274,7 @@ public class CliTests
                       "    public void Load()\n" +
                       "    {\n" +
                       "        var knownTranslations = \"\"\"\n" +
-                      "{\n" +
-                      "  \"hello\": \"Hello\"\n" +
-                      "}\n" +
+                      json + "\n" +
                       "\"\"\";\n" +
                       "    }\n" +
                       "}\n";
