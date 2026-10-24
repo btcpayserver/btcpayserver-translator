@@ -68,8 +68,10 @@ public class TranslationOrchestrator
                            "../BTCPayServer/translations";
             var outputPath = Path.Combine(outputDir, $"{languageInfo.Name.ToLower()}.json");
 
-            // Load existing translations if they exist
-            var existingTranslations = await _fileWriter.LoadExistingBackendTranslationsAsync(outputPath);
+            // Only initial creation may start without a pack. An existing pack must load successfully.
+            var existingTranslations = File.Exists(outputPath)
+                ? await _fileWriter.LoadExistingBackendTranslationsAsync(outputPath)
+                : new Dictionary<string, string>();
 
             // Determine what needs to be translated
             Dictionary<string, string> translationsToProcess;

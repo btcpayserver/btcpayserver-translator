@@ -108,37 +108,29 @@ public class FileWriter
         }
     }
 
+    /// <summary>
+    /// Reads an existing pack. Read and parse failures propagate to the calling operation;
+    /// an empty result is only returned after a successful read and parse.
+    /// Callers that support initial creation must handle an absent file explicitly.
+    /// </summary>
     public async Task<Dictionary<string, string>> LoadExistingBackendTranslationsAsync(string filePath)
     {
-        try
+        var content = await File.ReadAllTextAsync(filePath);
+        var jsonObject = JObject.Parse(content);
+        var translations = new Dictionary<string, string>();
+
+        foreach (var property in jsonObject.Properties())
         {
-            if (!File.Exists(filePath))
+            var value = property.Value?.ToString() ?? "";
+            if (!string.IsNullOrEmpty(value))
             {
-                return new Dictionary<string, string>();
+                translations[property.Name] = value;
             }
-
-            var content = await File.ReadAllTextAsync(filePath);
-            var jsonObject = JObject.Parse(content);
-            var translations = new Dictionary<string, string>();
-
-            foreach (var property in jsonObject.Properties())
-            {
-                var value = property.Value?.ToString() ?? "";
-                if (!string.IsNullOrEmpty(value))
-                {
-                    translations[property.Name] = value;
-                }
-            }
-
-            _logger.LogInformation("Loaded {Count} existing translations from {FilePath}", 
-                translations.Count, filePath);
-            return translations;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading existing translations from {FilePath}", filePath);
-            return new Dictionary<string, string>();
-        }
+
+        _logger.LogInformation("Loaded {Count} existing translations from {FilePath}",
+            translations.Count, filePath);
+        return translations;
     }
 
     public async Task WriteSummaryReportAsync(
