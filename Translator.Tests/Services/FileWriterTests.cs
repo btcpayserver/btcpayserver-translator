@@ -43,6 +43,43 @@ public class FileWriterTests
     }
 
     [Fact]
+    public async Task WriteBackendTranslationFileAsync_WritesMetadataBeforeSortedTranslations()
+    {
+        var sut = new FileWriter(NullLogger<FileWriter>.Instance);
+        var language = SupportedLanguages.GetLanguageInfo("fr")!;
+        var tempDir = CreateTempDirectory();
+        var outputPath = Path.Combine(tempDir, "french.json");
+
+        try
+        {
+            var translations = new Dictionary<string, string>
+            {
+                ["z"] = "Z",
+                ["A"] = "A"
+            };
+            var metadata = new[]
+            {
+                new KeyValuePair<string, string>("_source", "https://example.org/source"),
+                new KeyValuePair<string, string>("_maintainer", "Reviewer|https://example.org/reviewer")
+            };
+
+            await sut.WriteBackendTranslationFileAsync(outputPath, language, translations, metadata);
+
+            var json = JObject.Parse(await File.ReadAllTextAsync(outputPath));
+            var keys = json.Properties().Select(p => p.Name).ToList();
+
+            Assert.Equal(new[] { "_source", "_maintainer", "A", "z" }, keys);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public async Task LoadExistingBackendTranslationsAsync_ReturnsEmpty_OnMissingFile()
     {
         var sut = new FileWriter(NullLogger<FileWriter>.Instance);
