@@ -1358,7 +1358,6 @@
   "On-Chain Payments": "ऑन-चेन भुगतान",
   "On-Chain Payout Processor": "ऑन-चेन पेआउट प्रोसेसर",
   "On-chain wallets": "ऑन-चेन वॉलेट",
-  "Once your payment has received {0} confirmations on the {1} blockchain, your invoice will be settled.": "जब आपके भुगतान को {1} ब्लॉकचेन पर {0} पुष्टिकरण मिल जाएंगे, तब आपका चालान समाप्त हो जाएगा।",
   "One or more selected users are invalid.": "एक या अधिक चयनित उपयोगकर्ता अमान्य हैं।",
   "One or more signers no longer have wallet signing permission.": "एक या अधिक signers के पास अब वॉलेट हस्ताक्षर करने की अनुमति नहीं है।",
   "Online": "ऑनलाइन",

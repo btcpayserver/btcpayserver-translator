@@ -250,7 +250,6 @@
   "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to share this link with them: <a class='alert-link' href='{0}'>{0}</a>": "อีเมลคำเชิญไม่ได้ถูกส่ง เนื่องจากเซิร์ฟเวอร์ไม่ได้ตั้งค่าเซิร์ฟเวอร์อีเมล<br/> คุณจำเป็นต้องแชร์ลิงก์นี้กับพวกเขา: <a class='alert-link' href='{0}'>{0}</a>",
   "An invitation email has not been sent.<br/>You need to share this link with them: <a class='alert-link' href='{0}'>{0}</a>": "ยังไม่ได้ส่งอีเมลคำเชิญ<br/>คุณต้องแชร์ลิงก์นี้ให้พวกเขา: <a class='alert-link' href='{0}'>{0}</a>",
   "An invoice is only valid for {0} minutes.\n\nReturn to {1} if you would like to resubmit a payment.": "ใบแจ้งหนี้มีความใช้ได้เพียง {0} นาทีเท่านั้น หากต้องการชำระเงินอีกครั้ง กรุณากลับไปที่ {1} อีกครั้ง",
-  "An invoice is only valid for {0} minutes.\n\nThis invoice expired with partial payment. Please contact us, so that we can fulfill your order.": "ใบแจ้งหนี้มีความใช้ได้เฉพาะ {0} นาที เนื่องจากการชำ",
   "An invoice must be paid within a defined time interval at a fixed exchange rate to protect the issuer from price fluctuations.": "ใบแจ้งหนี้จะต้องชำระภายในระยะเวลาที่กำหนดด้วยอัตราแลกเปลี่ยนคงที่เพื่อป้องกันผู้ออกใบแจ้งหนี้จากความผันผวนของราคา",
   "An unexpected error happened: {0}": "เกิดข้อผิดพลาดที่ไม่คาดคิด: {0}",
   "An unexpected error occurred while registering the security device.": "เกิดข้อผิดพลาดที่ไม่คาดคิดขณะลงทะเบียนอุปกรณ์ความปลอดภัย",

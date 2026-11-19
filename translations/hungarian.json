@@ -14,7 +14,6 @@
   "Invoice Paid": "Kifizetett számla",
   "Lightning": "Lightning (villámfizetés)",
   "Network Cost": "Hálozat költsége",
-  "Once your payment has received {0} confirmations on the {1} blockchain, your invoice will be settled.": "Amint a fizetésed {0} megerősítést kapott a(z) {1} blokkláncban, az áfád rendezve lesz.",
   "Order ID": "Megbízás azonosítója",
   "Pay by LNURL-Withdraw": "Fizetés LNURL-Withdraw segítségével",
   "Pay by NFC": "Fizetés NFC-n keresztül",

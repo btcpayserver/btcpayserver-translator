@@ -14,7 +14,6 @@
   "Invoice Paid": "החשבונית שולמה",
   "Lightning": "Lightning (ברק)",
   "Network Cost": "עלות רשת",
-  "Once your payment has received {0} confirmations on the {1} blockchain, your invoice will be settled.": "כאשר התשלום שלך יקבל {0} אישורים בצד שרת ה- blockchain של {1}, החשבונית שלך תישוב.",
   "Order ID": "מספר הזמנה",
   "Pay by LNURL-Withdraw": "שלם באמצעות LNURL-Withdraw",
   "Pay by NFC": "שלם באמצעות NFC",
