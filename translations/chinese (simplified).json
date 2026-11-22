@@ -37,5 +37,6 @@
   "View Details": "查看详情",
   "View receipt": "View Receipt",
   "Your payment has been received and is now processing.": "您的付款已收到并正在处理中。",
+  "{0} sat/byte": "{0} sat/字节",
   "{0} transaction": "{0}次交易"
 }
