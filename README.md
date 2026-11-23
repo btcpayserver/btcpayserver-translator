@@ -234,29 +234,16 @@ Each translation file includes:
 
 Translation files are always stored with LF line endings, on every platform. The manifest's hashes depend on it.
 
-If you cloned this repo before that rule was added (see `.gitattributes`), your copies may still have Windows (CRLF) line endings, and `generate-manifest` would then produce wrong hashes. Refresh them once. If you have uncommitted changes to translation files, stash them first.
-
-Run these from the repo root, not from `Translator/`.
-
-On Windows:
+If you cloned this repo before that rule was added (see `.gitattributes`), your copies may still have Windows (CRLF) line endings, and `generate-manifest` would then produce wrong hashes. Refresh them once, from the repo root:
 
 ```bash
-git stash
-del /q translations\*.json
-git checkout -- translations
-git stash pop
+ git stash
+ git rm -r --cached -q translations
+ git checkout HEAD -- translations
+ git stash pop
 ```
 
-On macOS or Linux:
-
-```bash
-git stash
-rm translations/*.json
-git checkout -- translations
-git stash pop
-```
-
-Skip `git stash` and `git stash pop` if you have no local changes.
+This rewrites only the translation files tracked in the repo. Untracked files, such as a new language you haven't committed yet or .report.json files, are left alone. git stash keeps your uncommitted edits to tracked files; skip it and git stash pop if you have none
 
 ## Help us make it better
 
