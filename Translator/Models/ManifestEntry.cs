@@ -5,7 +5,6 @@ namespace BTCPayTranslator.Models;
 
 public record ManifestEntry(
     string Code, // "fr"
-    string Bcp47, // "fr-FR"
     string Name, // "French"
     string Native, // "Français"
     bool Rtl, // right-to-left indicator

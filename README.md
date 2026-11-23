@@ -174,10 +174,12 @@ All commands work without `--btcpay-url` — it is purely optional. The only dif
 
 The tool supports 100+ languages including:
 
-- **Major Languages**: Spanish (es), French (fr), German (de), Italian (it), Portuguese (pt), Russian (ru), Japanese (ja), Korean (ko), Chinese (zh-cn, zh-tw), Arabic (ar), Hindi (hi)
+- **Major Languages**: Spanish (es-ES), French (fr-FR), German (de-DE), Italian (it-IT), Portuguese (Brazil) (pt-BR), Russian (ru-RU), Japanese (ja-JP), Korean (ko), Chinese (zh-SG, zh-TW), Arabic (ar), Hindi (hi)
 - **European Languages**: Dutch, Swedish, Norwegian, Danish, Finnish, Polish, Czech, Hungarian, etc.
 - **Asian Languages**: Bengali, Tamil, Telugu, Malayalam, Thai, Vietnamese, Indonesian, etc.
 - **Regional Languages**: Catalan, Basque, Welsh, Irish, Scottish Gaelic, etc.
+
+Languages are identified by their BCP 47 code. The older short codes (such as `fr` or `pt`) are still accepted by every command as aliases; `list-languages` shows each code with its aliases.
 
 ## Configuration
 

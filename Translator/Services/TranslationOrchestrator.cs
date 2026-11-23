@@ -380,15 +380,12 @@ public class TranslationOrchestrator
             foreach (var filePath in translationFiles)
             {
                 var fileName = Path.GetFileNameWithoutExtension(filePath);
-                
-                var languageEntry = SupportedLanguages.Languages
-                    .FirstOrDefault(kvp => kvp.Value.Name.Equals(fileName, StringComparison.OrdinalIgnoreCase));
-                
-                if (!languageEntry.Equals(default(KeyValuePair<string, LanguageInfo>)))
+
+                var languageInfo = SupportedLanguages.GetLanguageInfoByName(fileName);
+                if (languageInfo is not null)
                 {
-                    languageCodes.Add(languageEntry.Key);
-                    _logger.LogInformation("  - {FileName} -> {LanguageCode} ({LanguageName})", 
-                        fileName, languageEntry.Key, languageEntry.Value.Name);
+                    languageCodes.Add(languageInfo.Code);
+                    _logger.LogInformation("  - {FileName} -> {LanguageCode} ({LanguageName})", fileName, languageInfo.Code, languageInfo.Name);
                 }
                 else
                 {
@@ -585,7 +582,9 @@ public class TranslationOrchestrator
             ? null
             : languageCodes
                 .Where(c => !string.IsNullOrWhiteSpace(c))
+                .Select(c => SupportedLanguages.GetLanguageInfo(c)?.Code ?? c)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         if (filterCodes is { Count: 0 })
             filterCodes = null;
 
@@ -612,7 +611,7 @@ public class TranslationOrchestrator
                 continue;
             }
 
-            var (code, _) = match.Value;
+            var code = match.Code;
             if (filterCodes != null && !filterCodes.Contains(code))
                 continue;
             

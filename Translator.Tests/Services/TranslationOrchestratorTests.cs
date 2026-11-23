@@ -258,7 +258,7 @@ public class TranslationOrchestratorTests
             var results = await orchestrator.UpdateAllLanguagesAsync();
 
             Assert.Single(results);
-            Assert.True(results["fr"]);
+            Assert.True(results["fr-FR"]);
         }
         finally
         {

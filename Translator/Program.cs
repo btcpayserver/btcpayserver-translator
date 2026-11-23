@@ -216,10 +216,12 @@ class Program
         {
             Console.WriteLine("Supported Languages:");
             Console.WriteLine("===================");
-            
+
             foreach (var lang in SupportedLanguages.GetAllLanguages().OrderBy(l => l.Name))
             {
-                Console.WriteLine($"{lang.Code,-10} {lang.Name,-20} {lang.NativeName}");
+                var aliases = string.Join(", ", SupportedLanguages.GetAliases(lang.Code));
+                var aliasText = aliases.Length > 0 ? $"(also: {aliases})" : "";
+                Console.WriteLine($"{lang.Code,-10} {lang.Name,-22} {lang.NativeName,-20} {aliasText}");
             }
         });
 

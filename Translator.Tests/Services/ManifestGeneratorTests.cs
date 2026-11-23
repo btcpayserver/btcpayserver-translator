@@ -36,8 +36,7 @@ public class ManifestGeneratorTests
             var manifest = await ReadManifest(manifestPath);
             var entry = Assert.Single(manifest.Languages);
 
-            Assert.Equal("fr", entry.Code);
-            Assert.Equal("fr-FR", entry.Bcp47);
+            Assert.Equal("fr-FR", entry.Code);
             Assert.Equal("French", entry.Name);
             Assert.Equal("Français", entry.Native);
             Assert.Equal("translations/French.json", entry.File);
@@ -153,8 +152,7 @@ public class ManifestGeneratorTests
                 new List<ManifestEntry>
                 {
                     new(
-                        Code: "fr",
-                        Bcp47: "fr-FR",
+                        Code: "fr-FR",
                         Name: "French",
                         Native: "Français",
                         Rtl: false,
@@ -207,8 +205,7 @@ public class ManifestGeneratorTests
                 new List<ManifestEntry>
                 {
                     new(
-                        Code: "fr",
-                        Bcp47: "fr-FR",
+                        Code: "fr-FR",
                         Name: "French",
                         Native: "Français",
                         Rtl: false,
