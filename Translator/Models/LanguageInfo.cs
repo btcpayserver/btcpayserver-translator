@@ -21,6 +21,7 @@ public static class SupportedLanguages
         new LanguageInfo("de-DE", "German", "Deutsch"),
         new LanguageInfo("it-IT", "Italian", "Italiano"),
         new LanguageInfo("pt-BR", "Portuguese (Brazil)", "Português (Brasil)"),
+        new LanguageInfo("pt-PT", "Portuguese (Portugal)", "Português (Portugal)"),
         new LanguageInfo("ru-RU", "Russian", "Русский"),
         new LanguageInfo("ja-JP", "Japanese", "日本語"),
         new LanguageInfo("ko", "Korean", "한국어"),
