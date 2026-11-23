@@ -10,6 +10,41 @@ namespace BTCPayTranslator.Tests.Services;
 public class ManifestGeneratorTests
 {
     [Fact]
+    public async Task GenerateManifest_IgnoresReportFiles()
+    {
+        var tempDir = CreateTempDirectory();
+        var translationsDir = Path.Combine(tempDir, "translations");
+        Directory.CreateDirectory(translationsDir);
+        var manifestPath = Path.Combine(tempDir, "manifest.json");
+
+        try
+        {
+            await File.WriteAllTextAsync(Path.Combine(translationsDir, "French.json"), """
+                {
+                  "_maintainer": "alice|https://github.com/alice",
+                  "hello": "bonjour"
+                }
+                """);
+            await File.WriteAllTextAsync(Path.Combine(translationsDir, "French.report.json"), "{}");
+
+            var sut = CreateSut();
+            var result = await sut.GenerateManifest(translationsDir, manifestPath);
+
+            Assert.True(result);
+            var manifest = await ReadManifest(manifestPath);
+            var entry = Assert.Single(manifest.Languages);
+            Assert.Equal("translations/French.json", entry.File);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public async Task GenerateManifest_WritesManifest_ForValidTranslationFile()
     {
         var tempDir = CreateTempDirectory();
