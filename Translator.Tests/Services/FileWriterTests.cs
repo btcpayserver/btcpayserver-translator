@@ -120,6 +120,36 @@ public class FileWriterTests
         }
     }
 
+    [Fact]
+    public async Task InsertMissingKeysAsync_InsertsOnce_WhenAKeyMatchesTheOldTopSentinel()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var path = Path.Combine(tempDir, "french.json");
+            await File.WriteAllTextAsync(path, "{\n  \" TOP\": \"haut\",\n  \"b\": \"bee\"\n}");
+
+            var sut = new FileWriter(NullLogger<FileWriter>.Instance);
+            var added = await sut.InsertMissingKeysAsync(path, new Dictionary<string, string>
+            {
+                [" TOP"] = "TOP",
+                ["a"] = "A",
+                ["b"] = "B"
+            });
+
+            Assert.Equal(1, added);
+            Assert.Equal("{\n  \" TOP\": \"haut\",\n  \"a\": \"A\",\n  \"b\": \"bee\"\n}",
+                await File.ReadAllTextAsync(path));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
     private static string CreateTempDirectory()
     {
         var directory = Path.Combine(Path.GetTempPath(), "BTCPayTranslator.Tests", Guid.NewGuid().ToString("N"));
