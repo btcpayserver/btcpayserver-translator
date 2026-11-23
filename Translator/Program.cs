@@ -101,7 +101,7 @@ class Program
     {
         var languageOption = new Option<string>(
             "--language",
-            "Language code to translate to (e.g., 'hi', 'es', 'fr')")
+            "Language code to translate to (e.g., 'hi', 'es-ES', 'fr-FR'). See list-languages.")
         {
             IsRequired = true
         };
@@ -148,7 +148,7 @@ class Program
     {
         var languagesOption = new Option<string[]>(
             "--languages",
-            "Multiple language codes to translate to (e.g., 'hi es fr')")
+            "Multiple language codes to translate to (e.g., 'hi es-ES fr-FR')")
         {
             IsRequired = true,
             AllowMultipleArgumentsPerToken = true
@@ -216,12 +216,9 @@ class Program
         {
             Console.WriteLine("Supported Languages:");
             Console.WriteLine("===================");
-
             foreach (var lang in SupportedLanguages.GetAllLanguages().OrderBy(l => l.Name))
             {
-                var aliases = string.Join(", ", SupportedLanguages.GetAliases(lang.Code));
-                var aliasText = aliases.Length > 0 ? $"(also: {aliases})" : "";
-                Console.WriteLine($"{lang.Code,-10} {lang.Name,-22} {lang.NativeName,-20} {aliasText}");
+                Console.WriteLine($"{lang.Code,-10} {lang.Name,-22} {lang.NativeName}");
             }
         });
 
@@ -277,7 +274,7 @@ class Program
     {
         var languageOption = new Option<string>(
             "--language",
-            "Language code to update (e.g., 'hi', 'es', 'fr')")
+            "Language code to update (e.g., 'hi', 'es-ES', 'fr-FR'). See list-languages.")
         {
             IsRequired = true
         };
@@ -319,7 +316,7 @@ class Program
     {
         var languagesOption = new Option<string[]>(
             "--languages",
-            "Multiple language codes to update (e.g., 'hi es fr')")
+            "Multiple language codes to update (e.g., 'hi es-ES fr-FR')")
         {
             IsRequired = true,
             AllowMultipleArgumentsPerToken = true
@@ -442,7 +439,7 @@ class Program
 
         var languagesOption = new Option<string[]>(
             "--languages",
-            "Optional language codes to limit the refresh to (e.g. 'fr es'). Omit to refresh all files.")
+            "Optional language codes to limit the refresh to (e.g. 'fr-FR es-ES'). Omit to refresh all files.")
         {
             IsRequired = false,
             AllowMultipleArgumentsPerToken = true

@@ -114,51 +114,24 @@ public static class SupportedLanguages
 
     public static readonly IReadOnlyDictionary<string, LanguageInfo> Languages = Catalogue.ToDictionary(l => l.Code, StringComparer.OrdinalIgnoreCase);
 
-    // Identifiers the CLI accepted before codes were unified.Kept so existing scripts keep working.
-    private static readonly Dictionary<string, string> Aliases = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["es"] = "es-ES",
-        ["fr"] = "fr-FR",
-        ["de"] = "de-DE",
-        ["it"] = "it-IT",
-        ["pt"] = "pt-BR",
-        ["ru"] = "ru-RU",
-        ["ja"] = "ja-JP",
-        ["zh-cn"] = "zh-SG",
-        ["nl"] = "nl-NL",
-        ["da"] = "da-DK",
-        ["fi"] = "fi-FI",
-        ["cs"] = "cs-CZ",
-        ["sk"] = "sk-SK",
-        ["hu"] = "hu-HU",
-        ["bg"] = "bg-BG",
-        ["hr"] = "hr-HR",
-        ["sl"] = "sl-SI",
-        ["uk"] = "uk-UA",
-        ["el"] = "el-GR",
-        ["th"] = "th-TH",
-        ["vi"] = "vi-VN",
-        ["ne"] = "ne-NP",
-        ["kk"] = "kk-KZ",
-        ["am"] = "am-ET",
-        ["is"] = "is-IS",
-        ["ca"] = "ca-ES",
-        ["bs"] = "bs-BA",
-    };
-
-    public static IReadOnlyDictionary<string, string> CompatibilityAliases => Aliases;
-
     public static LanguageInfo? GetLanguageInfo(string code)
     {
         if (string.IsNullOrWhiteSpace(code)) return null;
-        if (Languages.TryGetValue(code, out var info)) return info;
-        return Aliases.TryGetValue(code, out var canonical) ? Languages[canonical] : null;
+        return Languages.TryGetValue(code, out var info) ? info : null;
     }
 
     public static IEnumerable<LanguageInfo> GetAllLanguages() => Catalogue;
 
-    public static IEnumerable<string> GetAliases(string code) =>
-        Aliases.Where(a => a.Value.Equals(code, StringComparison.OrdinalIgnoreCase)).Select(a => a.Key);
+    /// Codes in the catalogue that share the input's language subtag,
+    /// e.g. "fr" -> fr-FR, "zh-cn" -> zh-SG, zh-TW. Used for error messages only.
+    public static IEnumerable<string> SuggestCodes(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return [];
+        var language = input.Split('-')[0];
+        return Catalogue
+            .Where(l => l.Code.Split('-')[0].Equals(language, StringComparison.OrdinalIgnoreCase))
+            .Select(l => l.Code);
+    }
 
     public static LanguageInfo? GetLanguageInfoByName(string name) =>
         Catalogue.FirstOrDefault(l => l.Name.Equals(name, StringComparison.OrdinalIgnoreCase));

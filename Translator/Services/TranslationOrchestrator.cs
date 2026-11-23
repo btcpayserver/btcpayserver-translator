@@ -54,7 +54,7 @@ public class TranslationOrchestrator
             var languageInfo = SupportedLanguages.GetLanguageInfo(languageCode);
             if (languageInfo == null)
             {
-                _logger.LogError("Unsupported language code: {LanguageCode}", languageCode);
+                LogUnsupportedLanguage(languageCode);
                 return false;
             }
 
@@ -198,7 +198,7 @@ public class TranslationOrchestrator
             var languageInfo = SupportedLanguages.GetLanguageInfo(languageCode);
             if (languageInfo == null)
             {
-                _logger.LogError("Unsupported language code: {LanguageCode}", languageCode);
+                LogUnsupportedLanguage(languageCode);
                 return false;
             }
 
@@ -462,7 +462,7 @@ public class TranslationOrchestrator
             var languageInfo = SupportedLanguages.GetLanguageInfo(languageCode);
             if (languageInfo == null)
             {
-                _logger.LogError("Unsupported language code: {LanguageCode}", languageCode);
+                LogUnsupportedLanguage(languageCode);
                 return false;
             }
 
@@ -562,6 +562,17 @@ public class TranslationOrchestrator
         }
     }
 
+    private void LogUnsupportedLanguage(string languageCode)
+    {
+        var suggestions = SupportedLanguages.SuggestCodes(languageCode).ToList();
+        if (suggestions.Count > 0)
+            _logger.LogError("Unsupported language code: {LanguageCode}. Did you mean: {Suggestions}?",
+                languageCode, string.Join(", ", suggestions));
+        else
+            _logger.LogError("Unsupported language code: {LanguageCode}. Run list-languages to see supported codes.",
+                languageCode);
+    }
+
     /// <summary>
     /// Inserts newly-added English source keys into existing translation files as English placeholders,
     /// without translating and without removing any keys. Existing entries are preserved byte-for-byte.
@@ -580,13 +591,17 @@ public class TranslationOrchestrator
 
         var filterCodes = languageCodes is null
             ? null
-            : languageCodes
-                .Where(c => !string.IsNullOrWhiteSpace(c))
-                .Select(c => SupportedLanguages.GetLanguageInfo(c)?.Code ?? c)
+            : languageCodes.Where(c => !string.IsNullOrWhiteSpace(c))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         if (filterCodes is { Count: 0 })
             filterCodes = null;
+
+        if (filterCodes != null)
+        {
+            foreach (var unknown in filterCodes.Where(c => SupportedLanguages.GetLanguageInfo(c) is null))
+                LogUnsupportedLanguage(unknown);
+        }
 
         var sourceTranslations = await GetSourceTranslationsAsync();
         _logger.LogInformation("Found {Count} strings in source", sourceTranslations.Count);
