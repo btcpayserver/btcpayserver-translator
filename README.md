@@ -240,10 +240,10 @@ If you cloned this repo before that rule was added (see `.gitattributes`), your 
  git stash
  git rm -r --cached -q translations
  git checkout HEAD -- translations
- git stash pop
+ git stash pop --index
 ```
 
-This rewrites only the translation files tracked in the repo. Untracked files, such as a new language you haven't committed yet or .report.json files, are left alone. git stash keeps your uncommitted edits to tracked files; skip it and git stash pop if you have none
+This rewrites only the translation files tracked in the repo. Untracked files, such as a new language you haven't committed yet or .report.json files, are left alone. git stash keeps your uncommitted edits to tracked files; skip it and git stash pop --index if you have none
 
 ## Help us make it better
 
