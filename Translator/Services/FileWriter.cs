@@ -57,7 +57,7 @@ public class FileWriter
             }
 
             // Write the file
-            var json = translationFile.ToString(Formatting.Indented);
+            var json = translationFile.ToString(Formatting.Indented).Replace("\r\n", "\n");
             await File.WriteAllTextAsync(outputPath, json);
 
             _logger.LogInformation("Successfully wrote {Count} translations to {OutputPath}", 
@@ -95,7 +95,7 @@ public class FileWriter
             }
 
             // Write the file
-            var json = translationFile.ToString(Formatting.Indented);
+            var json = translationFile.ToString(Formatting.Indented).Replace("\r\n", "\n");
             await File.WriteAllTextAsync(outputPath, json);
 
             _logger.LogInformation("Successfully wrote {Count} backend translations to {OutputPath}", 
@@ -283,14 +283,21 @@ public class FileWriter
             return raw;
 
         // For each missing key, find the existing key it should follow in canonical (writer) order.
-        const string topAnchor = " TOP";
+        // Keys that sort before every existing key go in a separate list, so no real key can clash with it.
+        var topKeys = new List<string>();
         var perAnchor = new Dictionary<string, List<string>>(StringComparer.Ordinal);
-        var anchor = topAnchor;
+        string? anchor = null;
         foreach (var key in existingKeys.Concat(missing).OrderBy(k => k, WriterKeyComparer))
         {
             if (existingSet.Contains(key))
             {
                 anchor = key;
+                continue;
+            }
+
+            if (anchor is null)
+            {
+                topKeys.Add(key);
                 continue;
             }
 
@@ -300,8 +307,7 @@ public class FileWriter
         }
 
         var units = new List<string>(entryLines.Count + missing.Count);
-        if (perAnchor.TryGetValue(topAnchor, out var topKeys))
-            units.AddRange(topKeys.Select(k => RenderEntryLine(k, source[k])));
+        units.AddRange(topKeys.Select(k => RenderEntryLine(k, source[k])));
         for (var i = 0; i < existingKeys.Count; i++)
         {
             units.Add(entryLines[i]);

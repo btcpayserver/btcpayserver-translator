@@ -26,7 +26,8 @@ public class ManifestGenerator
     {
         try
         {
-            return Directory.GetFiles(translationDirectoryPath, "*.json");
+            return Directory.GetFiles(translationDirectoryPath, "*.json")
+                .Where(p => !p.EndsWith(".report.json", StringComparison.OrdinalIgnoreCase));
         }
         catch (Exception ex)
         {
