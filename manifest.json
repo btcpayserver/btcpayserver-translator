@@ -1,14 +1,124 @@
 {
   "Languages": [
     {
+      "Code": "am-ET",
+      "Name": "Amharic",
+      "Native": "አማርኛ",
+      "Rtl": false,
+      "File": "translations/amharic.json",
+      "Sha": "2324b2478ac2bb255484dbfa42558ebf64c94133702e480b972522463669171f",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
       "Code": "ar",
       "Name": "Arabic",
       "Native": "العربية",
       "Rtl": true,
       "File": "translations/arabic.json",
-      "Sha": "175a327e0667c881c65bfc88e6a678b9b73b336169225d8cf60106f16314071d",
+      "Sha": "e8fb626904a8fe228b99b685f3543fa24c1af4ec369c417d6d9f6e37ecba2598",
       "Maintainer": null,
-      "Updated": "2026-06-28T11:08:46Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "hy",
+      "Name": "Armenian",
+      "Native": "Հայերեն",
+      "Rtl": false,
+      "File": "translations/armenian.json",
+      "Sha": "bfc762dafb8e3c1c32fd86c0da0ed43ab028bb0833cd5447307e611d6b52fa99",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "az",
+      "Name": "Azerbaijani",
+      "Native": "Azərbaycan",
+      "Rtl": false,
+      "File": "translations/azerbaijani.json",
+      "Sha": "33e98e6399745170b78e52f3bfb45f51ee78701843a6fbc89f409ccb99182bdd",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "bs-BA",
+      "Name": "Bosnian",
+      "Native": "Bosanski",
+      "Rtl": false,
+      "File": "translations/bosnian.json",
+      "Sha": "a0a4da797ee8d9ced35bc524423102a164afb84a0fd867abb3b1fb2497f648de",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "bg-BG",
+      "Name": "Bulgarian",
+      "Native": "Български",
+      "Rtl": false,
+      "File": "translations/bulgarian.json",
+      "Sha": "476bb17cf9bf511fbba657ada43c2bed7c4bcea55012bfac61e718444acb87bb",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "ca-ES",
+      "Name": "Catalan",
+      "Native": "Català",
+      "Rtl": false,
+      "File": "translations/catalan.json",
+      "Sha": "9e57c6e94a54aac433c720ec286634c474d90ba5b03d84015093b7e0b3cde173",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "zh-SG",
+      "Name": "Chinese (Simplified)",
+      "Native": "简体中文",
+      "Rtl": false,
+      "File": "translations/chinese (simplified).json",
+      "Sha": "73fe2369d14950c417c1733cc97fabde80fe366ce06fd04f7dcf0d3f1fe40bc4",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "zh-TW",
+      "Name": "Chinese (Traditional)",
+      "Native": "繁體中文",
+      "Rtl": false,
+      "File": "translations/chinese (traditional).json",
+      "Sha": "a7086e40cbea08d423e94b6d33523924d1e5322f9e0ed827a7a411d5dfcd5792",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "hr-HR",
+      "Name": "Croatian",
+      "Native": "Hrvatski",
+      "Rtl": false,
+      "File": "translations/croatian.json",
+      "Sha": "0a3691c35cb233022f12828de3c5178edbe43fa9cdc2e212d10b491620579dc0",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "cs-CZ",
+      "Name": "Czech",
+      "Native": "Čeština",
+      "Rtl": false,
+      "File": "translations/czech.json",
+      "Sha": "52f04035a6822e69579985161a7fbf378e5bf000792f80edadeb10d08c0011aa",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "da-DK",
+      "Name": "Danish",
+      "Native": "Dansk",
+      "Rtl": false,
+      "File": "translations/danish.json",
+      "Sha": "a60a53ea54a2c37bfe12c60866131b8e118904f6012a5e769fdb985dbe427970",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "nl-NL",
@@ -16,9 +126,19 @@
       "Native": "Nederlands",
       "Rtl": false,
       "File": "translations/dutch.json",
-      "Sha": "52db1e7c0d65d6ed2d4ad958d88c119054e700d3dda6f8c1371a104d51c5ef05",
+      "Sha": "2fa6622325cafa4a2cbcb751e065d2c19411dc6299189f0d118b34c5ac74304d",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "fi-FI",
+      "Name": "Finnish",
+      "Native": "Suomi",
+      "Rtl": false,
+      "File": "translations/finnish.json",
+      "Sha": "5d1d67c548707db3394841120da49db6750bc4b35d1af5d3d59ba17e8d987d8e",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "fr-FR",
@@ -26,9 +146,19 @@
       "Native": "Français",
       "Rtl": false,
       "File": "translations/french.json",
-      "Sha": "ee8c75fed88db75f1d61d23d458b7631fafea8dbbd01f7219c28b949ad4ec8f8",
+      "Sha": "4057ee6f58e663f8b070664ccf2c4023574d4df11715d9011edc6c878f9c95cb",
       "Maintainer": "teamssUTXO|https://github.com/teamssUTXO",
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "ka",
+      "Name": "Georgian",
+      "Native": "ქართული",
+      "Rtl": false,
+      "File": "translations/georgian.json",
+      "Sha": "26494df6077d31e5895319818fd5399530643083b26aedf9502f0148086414fc",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "de-DE",
@@ -36,9 +166,29 @@
       "Native": "Deutsch",
       "Rtl": false,
       "File": "translations/german.json",
-      "Sha": "cf735a8adad19e2cd51816a1ca786df0700001fa59d60551052ecb16cc9bd2eb",
+      "Sha": "de11328924cfd28bf3f18ad3c2724113fd2213799a1b24996543cd4e58f29cae",
       "Maintainer": null,
-      "Updated": "2026-06-28T15:51:37Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "el-GR",
+      "Name": "Greek",
+      "Native": "Ελληνικά",
+      "Rtl": false,
+      "File": "translations/greek.json",
+      "Sha": "7242adf2d89f385ecede133c4b8f58c74b6879fae9805a566806a58c55a3e106",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "he",
+      "Name": "Hebrew",
+      "Native": "עברית",
+      "Rtl": true,
+      "File": "translations/hebrew.json",
+      "Sha": "c5facd3613590be0885cb7c81f28c1b2c5bd7166864895306bb5df4cfc251849",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "hi",
@@ -46,9 +196,29 @@
       "Native": "हिंदी",
       "Rtl": false,
       "File": "translations/hindi.json",
-      "Sha": "eab04b257898d4311f6b4be964fb8ad19e36eb366b672e9053de351181615bfb",
+      "Sha": "714cb3722816e62f89a5dd69b70cd35f0b588efac29022e46daae46d771e5cac",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "hu-HU",
+      "Name": "Hungarian",
+      "Native": "Magyar",
+      "Rtl": false,
+      "File": "translations/hungarian.json",
+      "Sha": "03a9bbae1542327f3bf44822fd863806cc6293547380b347e7c28a0a3571dfc5",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "is-IS",
+      "Name": "Icelandic",
+      "Native": "Íslenska",
+      "Rtl": false,
+      "File": "translations/icelandic.json",
+      "Sha": "ee62abb6e962b6873a54a9d73122b163a679283bb30debd11f4d0e087ff0a9a8",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "id",
@@ -56,9 +226,9 @@
       "Native": "Bahasa Indonesia",
       "Rtl": false,
       "File": "translations/indonesian.json",
-      "Sha": "efe35f2a29ac8920fb1e166ded4337306a3d26a04ba213e7bba9482685d835c8",
+      "Sha": "4183975502ac3a2a0f30dd571b97e567e0fc34abd84f3f25899d3bd847d5bc88",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "it-IT",
@@ -66,9 +236,9 @@
       "Native": "Italiano",
       "Rtl": false,
       "File": "translations/italian.json",
-      "Sha": "e5ecd7723cd76727593c1d538266a9bf612a3118b9599fba1f61e634a545aa7a",
+      "Sha": "0c44b4629d969356b2d0819186dce7ffc77f94f38c55f091c29105877f6d4d21",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "ja-JP",
@@ -76,9 +246,19 @@
       "Native": "日本語",
       "Rtl": false,
       "File": "translations/japanese.json",
-      "Sha": "d2908dc6a0a8a530b928cce06bbfffa8fb1088c2183bb915d807744df1a6cc32",
+      "Sha": "ab7a792b3eddf332d26f667cc08a5b8eb84ea22c04871977dc0bce9c51faaf1b",
       "Maintainer": null,
-      "Updated": "2026-07-03T22:01:18Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "kk-KZ",
+      "Name": "Kazakh",
+      "Native": "Қазақша",
+      "Rtl": false,
+      "File": "translations/kazakh.json",
+      "Sha": "12255e9136f09cc8ac34a6de6ddf7cba41a09e12a6d6ea26349eac19c7877f91",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "ko",
@@ -86,9 +266,29 @@
       "Native": "한국어",
       "Rtl": false,
       "File": "translations/korean.json",
-      "Sha": "e1034b11a2709ca7b6cec7893d62d33bf3378d9993a0124e01b072eab0355e16",
+      "Sha": "0cd3908166c9abd39357bd65090a64503d1bff83ccfd6cf1ba62049addc802ba",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "lv",
+      "Name": "Latvian",
+      "Native": "Latviešu",
+      "Rtl": false,
+      "File": "translations/latvian.json",
+      "Sha": "09bf7b9310904b176ae1b87b2d182105b74ce4c685ab85faf54edabd9508dabf",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "ne-NP",
+      "Name": "Nepali",
+      "Native": "नेपाली",
+      "Rtl": false,
+      "File": "translations/nepali.json",
+      "Sha": "986b2c55130e3fdd7315c213ceced459a3759d7646e6ee26b55043a09224de43",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "no",
@@ -96,9 +296,29 @@
       "Native": "Norsk",
       "Rtl": false,
       "File": "translations/norwegian.json",
-      "Sha": "8141a2efefd9f3eb34401ee1da3602161abdefb9e1ec2a2027dfdaebef8dbfb9",
+      "Sha": "5cdd3a4dcb7deb00fafd4a8f70222822e20def37a5324c56dc4d3dccd598a1b7",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "fa",
+      "Name": "Persian",
+      "Native": "فارسی",
+      "Rtl": true,
+      "File": "translations/persian.json",
+      "Sha": "2df3bdfbab4bd85ddf5e754da822a6e2226374c6b26f4ddeaf2c3e8efaf1e627",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "pl",
+      "Name": "Polish",
+      "Native": "Polski",
+      "Rtl": false,
+      "File": "translations/polish.json",
+      "Sha": "4be0ae1ef661a310c408a7cad135e1e5e1f251ab3af91eee01b34deaaa4fdb7f",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "pt-BR",
@@ -106,9 +326,19 @@
       "Native": "Português (Brasil)",
       "Rtl": false,
       "File": "translations/portuguese (brazil).json",
-      "Sha": "7da7482c7783accab00caf78d8b2ca9061c031f2f8673ca519014f67da0053df",
+      "Sha": "680a294b8cb29fd6d934e4278c373c42efc63e4818e34834bda27803faa14ecb",
       "Maintainer": "thgO-O|https://github.com/thgO-O",
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "pt-PT",
+      "Name": "Portuguese (Portugal)",
+      "Native": "Português (Portugal)",
+      "Rtl": false,
+      "File": "translations/portuguese (portugal).json",
+      "Sha": "c9f9118fb74ed32ca5fc8c743a992a49b3b3d5431c5506b961db89fc65550097",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "ro",
@@ -116,9 +346,9 @@
       "Native": "Română",
       "Rtl": false,
       "File": "translations/romanian.json",
-      "Sha": "bc89cf5b9cfa7605afa083832b81223b7f088ffd207133b3965a177cb42c4b51",
+      "Sha": "cdc0405cbba30c1cdef4e7fcb6574729886d3d5224caac373849f4a6264e8ff1",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "ru-RU",
@@ -126,9 +356,9 @@
       "Native": "Русский",
       "Rtl": false,
       "File": "translations/russian.json",
-      "Sha": "b2d5fb22dcaa5e531a355c87ffafb91091f1fe56cf114b520349b8d8b2b44e07",
+      "Sha": "7bebf3ceee005634061ab74b41b8b77b28967f90f4bc0ac5d595462f582c07fd",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "sr",
@@ -136,9 +366,29 @@
       "Native": "Српски",
       "Rtl": false,
       "File": "translations/serbian.json",
-      "Sha": "2f3a3a9450f9d42ea2648f0fa78a890bda096df4cc9ced04346fecbf89fbec71",
+      "Sha": "a221d3f446ee7e71f544cf7e859ecc33899b3bd6866be69fcfdd409f5744e7cb",
       "Maintainer": "sanya|https://github.com/Sanja22B",
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "sk-SK",
+      "Name": "Slovak",
+      "Native": "Slovenčina",
+      "Rtl": false,
+      "File": "translations/slovak.json",
+      "Sha": "14f408c065b19b5d5d92bc37958c9dd88e70fe8cb0056084d74e5a51b5cd2399",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "sl-SI",
+      "Name": "Slovenian",
+      "Native": "Slovenščina",
+      "Rtl": false,
+      "File": "translations/slovenian.json",
+      "Sha": "8883c16cca404f3c3cd1e2caf6a867bf1c15941373ad4aceb0592f3a82cbf4d1",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "es-ES",
@@ -146,9 +396,9 @@
       "Native": "Español",
       "Rtl": false,
       "File": "translations/spanish.json",
-      "Sha": "ef5288500b5e38a9a6fdbfd23e584774753468e2e1f43454a0206b791858abda",
+      "Sha": "18698a2e67a135f6bbf3764c8db25a2ed4f79d1c200bce14ec8819b35b2324e0",
       "Maintainer": "daxsosa|https://github.com/daxsosa",
-      "Updated": "2026-06-17T18:59:55Z"
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "sw",
@@ -161,14 +411,24 @@
       "Updated": "2026-10-24T17:31:00Z"
     },
     {
+      "Code": "sv",
+      "Name": "Swedish",
+      "Native": "Svenska",
+      "Rtl": false,
+      "File": "translations/swedish.json",
+      "Sha": "591654586fbfc4ddc721ddd22437a9185fd6ccb90c5aa61953e0b42177eeb5a0",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
       "Code": "th-TH",
       "Name": "Thai",
       "Native": "ไทย",
       "Rtl": false,
       "File": "translations/thai.json",
-      "Sha": "d32a22b4f70c02f60527e946232a77eb7a9a95b693ca3c3ff4e8310351ba0674",
+      "Sha": "20a0d2eae172f4803a85f98bae4298332b0f57c8cc45dd0b9e96da95561885f8",
       "Maintainer": null,
-      "Updated": "2026-06-15T10:36:23Z"
+      "Updated": "2026-11-23T15:44:02Z"
     },
     {
       "Code": "tr",
@@ -176,9 +436,29 @@
       "Native": "Türkçe",
       "Rtl": false,
       "File": "translations/turkish.json",
-      "Sha": "0f68404508488e926a37d25ca7cb29f7867bcb3acfb53f6d35cbfeb420a88ac1",
+      "Sha": "b645ddbbc736f4dfded11514458e0ffd19ccd498886f72d822d74d70de23900f",
       "Maintainer": "Hüseyin Durna|https://github.com/husodrn46",
-      "Updated": "2026-10-24T17:05:39Z"
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "uk-UA",
+      "Name": "Ukrainian",
+      "Native": "Українська",
+      "Rtl": false,
+      "File": "translations/ukrainian.json",
+      "Sha": "0d9160c4354bb370441cb532dc940308fb9b4fa1fad3081676093a7fa76935c7",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
+    },
+    {
+      "Code": "vi-VN",
+      "Name": "Vietnamese",
+      "Native": "Tiếng Việt",
+      "Rtl": false,
+      "File": "translations/vietnamese.json",
+      "Sha": "1827708360d11bcbcf768bcc331520174e63917a06763f5038c144408ac47c08",
+      "Maintainer": null,
+      "Updated": "2026-11-23T15:44:02Z"
     }
   ],
   "Redirect": null
