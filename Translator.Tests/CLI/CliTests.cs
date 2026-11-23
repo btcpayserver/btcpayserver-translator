@@ -32,7 +32,7 @@ public class CliTests
         try
         {
             var result = await CliTestHost.RunAsync(
-                ["update", "--language", "fr"],
+                ["update", "--language", "fr-FR"],
                 new Dictionary<string, string?>
                 {
                     ["Translation__OutputDirectory"] = outputDirectory,
@@ -88,7 +88,7 @@ public class CliTests
         try
         {
             var result = await CliTestHost.RunAsync(
-                ["batch-update", "--languages", "fr", "xx", "--continue-on-error"],
+                ["batch-update", "--languages", "fr-FR", "xx", "--continue-on-error"],
                 new Dictionary<string, string?>
                 {
                     ["Translation__OutputDirectory"] = outputDirectory

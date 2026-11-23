@@ -79,14 +79,12 @@ public class ManifestGenerator
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);
 
-            var result = SupportedLanguages.GetLanguageInfoByName(fileName);
-            if (!result.HasValue)
+            var langInfo = SupportedLanguages.GetLanguageInfoByName(fileName);
+            if (langInfo is null)
             {
                 _logger.LogError("No language info mapping found for translation file {FileName}", fileName);
                 throw new Exception($"No language info found for {fileName}");
             }
-            var (code, langInfo) = result.Value;
-
             var hashedFile = await HashFiles(filePath);
             if (hashedFile == null)
             {
@@ -99,8 +97,7 @@ public class ManifestGenerator
             var updatedAt = existingEntry?.Sha == hashedFile ? existingEntry!.Updated : runUpdatedAt;
 
             var entry = new ManifestEntry(
-                Code: code,
-                Bcp47: langInfo.Code,
+                Code: langInfo.Code,
                 Name: langInfo.Name,
                 Native: langInfo.NativeName,
                 Rtl: langInfo.IsRightToLeft,
