@@ -66,13 +66,13 @@ dotnet run -- translate --language hi --force
 ### Batch Translation to Multiple Languages
 ```bash
 # Translate to multiple languages
-dotnet run -- batch --languages hi es fr de
+dotnet run -- batch --languages hi es-ES fr-FR de-DE
 
 # Continue on error (don't stop if one language fails)
-dotnet run -- batch --languages hi es fr de --continue-on-error
+dotnet run -- batch --languages hi es-ES fr-FR de-DE --continue-on-error
 
 # Force retranslation
-dotnet run -- batch --languages hi es fr de --force
+dotnet run -- batch --languages hi es-ES fr-FR de-DE --force
 ```
 
 ### Check Translation Status
@@ -91,10 +91,10 @@ dotnet run -- update --language hi
 #### Update Multiple Languages
 ```bash
 # Update multiple specific languages
-dotnet run -- batch-update --languages hi es fr de
+dotnet run -- batch-update --languages hi es-ES fr-FR de-DE
 
 # Continue on error (don't stop if one language fails)
-dotnet run -- batch-update --languages hi es fr de --continue-on-error
+dotnet run -- batch-update --languages hi es-ES fr-FR de-DE --continue-on-error
 ```
 
 #### Update All Existing Languages Automatically
@@ -130,7 +130,7 @@ If you just want to add the newly-added English keys to your translation files a
 dotnet run -- refresh-keys --source-file ../btcpayserver/BTCPayServer/Services/Translations.Default.cs
 
 # Refresh only specific languages
-dotnet run -- refresh-keys --source-file ./Translations.Default.cs --languages fr es de
+dotnet run -- refresh-keys --source-file ./Translations.Default.cs --languages fr-FR es-ES de-DE
 
 # Refresh from a running BTCPay Server (includes the DI-registered strings)
 dotnet run -- refresh-keys --btcpay-url http://localhost:14142
@@ -159,7 +159,7 @@ dotnet run --launch-profile Bitcoin
 
 # 2. Run any translation command against the live instance
 dotnet run -- update-all --btcpay-url http://localhost:14142
-dotnet run -- translate --language ja --btcpay-url http://localhost:14142
+dotnet run -- translate --language ja-JP --btcpay-url http://localhost:14142
 ```
 
 You can also set it permanently in `.env` so you don't have to pass it every time:
@@ -174,10 +174,12 @@ All commands work without `--btcpay-url` — it is purely optional. The only dif
 
 The tool supports 100+ languages including:
 
-- **Major Languages**: Spanish (es), French (fr), German (de), Italian (it), Portuguese (pt), Russian (ru), Japanese (ja), Korean (ko), Chinese (zh-cn, zh-tw), Arabic (ar), Hindi (hi)
+- **Major Languages**: Spanish (es-ES), French (fr-FR), German (de-DE), Italian (it-IT), Portuguese (Brazil) (pt-BR), Russian (ru-RU), Japanese (ja-JP), Korean (ko), Chinese (zh-SG, zh-TW), Arabic (ar), Hindi (hi)
 - **European Languages**: Dutch, Swedish, Norwegian, Danish, Finnish, Polish, Czech, Hungarian, etc.
 - **Asian Languages**: Bengali, Tamil, Telugu, Malayalam, Thai, Vietnamese, Indonesian, etc.
 - **Regional Languages**: Catalan, Basque, Welsh, Irish, Scottish Gaelic, etc.
+
+Languages are identified by their BCP 47 code. Run `list-languages` to see the exact code for each language.
 
 ## Configuration
 

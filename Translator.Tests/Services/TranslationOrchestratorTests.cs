@@ -87,7 +87,7 @@ public class TranslationOrchestratorTests
             var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
             var fakeService = new FakeTranslationService(r => new TranslationResponse(r.Key, $"fr-{r.SourceText}", true));
             var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
-            var language = SupportedLanguages.GetLanguageInfo("fr")!;
+            var language = SupportedLanguages.GetLanguageInfo("fr-FR")!;
             var outputPath = Path.Combine(tempDir, $"{language.Name.ToLower()}.json");
 
             await fileWriter.WriteBackendTranslationFileAsync(
@@ -107,7 +107,7 @@ public class TranslationOrchestratorTests
                     ["Translation:DelayBetweenRequests"] = "0"
                 });
 
-            var success = await orchestrator.TranslateToLanguageAsync("fr");
+            var success = await orchestrator.TranslateToLanguageAsync("fr-FR");
 
             Assert.True(success);
             Assert.Equal(2, fakeService.SeenRequests.Count);
@@ -136,7 +136,7 @@ public class TranslationOrchestratorTests
             var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
             var fakeService = new FakeTranslationService();
             var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
-            var language = SupportedLanguages.GetLanguageInfo("fr")!;
+            var language = SupportedLanguages.GetLanguageInfo("fr-FR")!;
             var outputPath = Path.Combine(tempDir, $"{language.Name.ToLower()}.json");
 
             await fileWriter.WriteBackendTranslationFileAsync(
@@ -158,7 +158,7 @@ public class TranslationOrchestratorTests
                     ["Translation:InputFile"] = inputFile
                 });
 
-            var success = await orchestrator.TranslateToLanguageAsync("fr");
+            var success = await orchestrator.TranslateToLanguageAsync("fr-FR");
 
             Assert.True(success);
             Assert.Empty(fakeService.SeenRequests);
@@ -181,7 +181,7 @@ public class TranslationOrchestratorTests
             var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
             var fakeService = new FakeTranslationService(r => new TranslationResponse(r.Key, $"upd-{r.SourceText}", true));
             var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
-            var language = SupportedLanguages.GetLanguageInfo("fr")!;
+            var language = SupportedLanguages.GetLanguageInfo("fr-FR")!;
             var outputPath = Path.Combine(tempDir, $"{language.Name.ToLower()}.json");
 
             await fileWriter.WriteBackendTranslationFileAsync(
@@ -205,7 +205,7 @@ public class TranslationOrchestratorTests
                     ["Translation:DelayBetweenRequests"] = "0"
                 });
 
-            var success = await orchestrator.UpdateLanguageAsync("fr");
+            var success = await orchestrator.UpdateLanguageAsync("fr-FR");
 
             Assert.True(success);
             Assert.Single(fakeService.SeenRequests);
@@ -238,7 +238,7 @@ public class TranslationOrchestratorTests
 
             await fileWriter.WriteBackendTranslationFileAsync(
                 Path.Combine(tempDir, "french.json"),
-                SupportedLanguages.GetLanguageInfo("fr")!,
+                SupportedLanguages.GetLanguageInfo("fr-FR")!,
                 new Dictionary<string, string> { ["hello"] = "bonjour" });
 
             await File.WriteAllTextAsync(Path.Combine(tempDir, "unknown.json"), "{\"test\":\"test\"}");
@@ -258,7 +258,7 @@ public class TranslationOrchestratorTests
             var results = await orchestrator.UpdateAllLanguagesAsync();
 
             Assert.Single(results);
-            Assert.True(results["fr"]);
+            Assert.True(results["fr-FR"]);
         }
         finally
         {
@@ -280,7 +280,7 @@ public class TranslationOrchestratorTests
 
             await fileWriter.WriteBackendTranslationFileAsync(
                 Path.Combine(tempDir, "french.json"),
-                SupportedLanguages.GetLanguageInfo("fr")!,
+                SupportedLanguages.GetLanguageInfo("fr-FR")!,
                 new Dictionary<string, string> { ["hello"] = "bonjour" });
 
             var orchestrator = CreateOrchestrator(
@@ -323,7 +323,7 @@ public class TranslationOrchestratorTests
 
             await fileWriter.WriteBackendTranslationFileAsync(
                 Path.Combine(tempDir, "french.json"),
-                SupportedLanguages.GetLanguageInfo("fr")!,
+                SupportedLanguages.GetLanguageInfo("fr-FR")!,
                 new Dictionary<string, string> { ["hello"] = "bonjour" });
             await File.WriteAllTextAsync(Path.Combine(tempDir, "unknown.json"), "{\r\n  \"test\": \"test\"\r\n}");
 
@@ -364,11 +364,11 @@ public class TranslationOrchestratorTests
 
             await fileWriter.WriteBackendTranslationFileAsync(
                 Path.Combine(tempDir, "french.json"),
-                SupportedLanguages.GetLanguageInfo("fr")!,
+                SupportedLanguages.GetLanguageInfo("fr-FR")!,
                 new Dictionary<string, string> { ["hello"] = "bonjour" });
             await fileWriter.WriteBackendTranslationFileAsync(
                 Path.Combine(tempDir, "german.json"),
-                SupportedLanguages.GetLanguageInfo("de")!,
+                SupportedLanguages.GetLanguageInfo("de-DE")!,
                 new Dictionary<string, string> { ["hello"] = "hallo" });
 
             var orchestrator = CreateOrchestrator(
@@ -381,7 +381,7 @@ public class TranslationOrchestratorTests
                     ["Translation:InputFile"] = inputFile
                 });
 
-            var result = await orchestrator.RefreshKeysAsync(new[] { "fr" });
+            var result = await orchestrator.RefreshKeysAsync(new[] { "fr-FR" });
 
             Assert.Equal(1, result.FilesProcessed);
             Assert.True(result.AddedByFile.ContainsKey("french.json"));
@@ -410,7 +410,7 @@ public class TranslationOrchestratorTests
 
             await fileWriter.WriteBackendTranslationFileAsync(
                 Path.Combine(tempDir, "french.json"),
-                SupportedLanguages.GetLanguageInfo("fr")!,
+                SupportedLanguages.GetLanguageInfo("fr-FR")!,
                 new Dictionary<string, string> { ["hello"] = "bonjour" });
 
             var orchestrator = CreateOrchestrator(

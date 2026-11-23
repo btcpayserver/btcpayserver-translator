@@ -2,7 +2,6 @@
   "Languages": [
     {
       "Code": "ar",
-      "Bcp47": "ar",
       "Name": "Arabic",
       "Native": "العربية",
       "Rtl": true,
@@ -12,8 +11,7 @@
       "Updated": "2026-06-28T11:08:46Z"
     },
     {
-      "Code": "nl",
-      "Bcp47": "nl-NL",
+      "Code": "nl-NL",
       "Name": "Dutch",
       "Native": "Nederlands",
       "Rtl": false,
@@ -23,8 +21,7 @@
       "Updated": "2026-06-15T10:36:23Z"
     },
     {
-      "Code": "fr",
-      "Bcp47": "fr-FR",
+      "Code": "fr-FR",
       "Name": "French",
       "Native": "Français",
       "Rtl": false,
@@ -34,8 +31,7 @@
       "Updated": "2026-06-15T10:36:23Z"
     },
     {
-      "Code": "de",
-      "Bcp47": "de-DE",
+      "Code": "de-DE",
       "Name": "German",
       "Native": "Deutsch",
       "Rtl": false,
@@ -46,7 +42,6 @@
     },
     {
       "Code": "hi",
-      "Bcp47": "hi",
       "Name": "Hindi",
       "Native": "हिंदी",
       "Rtl": false,
@@ -57,7 +52,6 @@
     },
     {
       "Code": "id",
-      "Bcp47": "id",
       "Name": "Indonesian",
       "Native": "Bahasa Indonesia",
       "Rtl": false,
@@ -67,8 +61,7 @@
       "Updated": "2026-06-15T10:36:23Z"
     },
     {
-      "Code": "it",
-      "Bcp47": "it-IT",
+      "Code": "it-IT",
       "Name": "Italian",
       "Native": "Italiano",
       "Rtl": false,
@@ -78,8 +71,7 @@
       "Updated": "2026-06-15T10:36:23Z"
     },
     {
-      "Code": "ja",
-      "Bcp47": "ja-JP",
+      "Code": "ja-JP",
       "Name": "Japanese",
       "Native": "日本語",
       "Rtl": false,
@@ -90,7 +82,6 @@
     },
     {
       "Code": "ko",
-      "Bcp47": "ko",
       "Name": "Korean",
       "Native": "한국어",
       "Rtl": false,
@@ -101,7 +92,6 @@
     },
     {
       "Code": "no",
-      "Bcp47": "no",
       "Name": "Norwegian",
       "Native": "Norsk",
       "Rtl": false,
@@ -111,8 +101,7 @@
       "Updated": "2026-06-15T10:36:23Z"
     },
     {
-      "Code": "pt",
-      "Bcp47": "pt-BR",
+      "Code": "pt-BR",
       "Name": "Portuguese (Brazil)",
       "Native": "Português (Brasil)",
       "Rtl": false,
@@ -123,7 +112,6 @@
     },
     {
       "Code": "ro",
-      "Bcp47": "ro",
       "Name": "Romanian",
       "Native": "Română",
       "Rtl": false,
@@ -133,8 +121,7 @@
       "Updated": "2026-06-15T10:36:23Z"
     },
     {
-      "Code": "ru",
-      "Bcp47": "ru-RU",
+      "Code": "ru-RU",
       "Name": "Russian",
       "Native": "Русский",
       "Rtl": false,
@@ -145,7 +132,6 @@
     },
     {
       "Code": "sr",
-      "Bcp47": "sr",
       "Name": "Serbian",
       "Native": "Српски",
       "Rtl": false,
@@ -155,8 +141,7 @@
       "Updated": "2026-06-15T10:36:23Z"
     },
     {
-      "Code": "es",
-      "Bcp47": "es-ES",
+      "Code": "es-ES",
       "Name": "Spanish",
       "Native": "Español",
       "Rtl": false,
@@ -167,7 +152,6 @@
     },
     {
       "Code": "sw",
-      "Bcp47": "sw",
       "Name": "Swahili",
       "Native": "Kiswahili",
       "Rtl": false,
@@ -177,8 +161,7 @@
       "Updated": "2026-10-24T17:31:00Z"
     },
     {
-      "Code": "th",
-      "Bcp47": "th-TH",
+      "Code": "th-TH",
       "Name": "Thai",
       "Native": "ไทย",
       "Rtl": false,
@@ -189,7 +172,6 @@
     },
     {
       "Code": "tr",
-      "Bcp47": "tr",
       "Name": "Turkish",
       "Native": "Türkçe",
       "Rtl": false,

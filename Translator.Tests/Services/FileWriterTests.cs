@@ -12,7 +12,7 @@ public class FileWriterTests
     public async Task WriteBackendTranslationFileAsync_WritesSortedJson()
     {
         var sut = new FileWriter(NullLogger<FileWriter>.Instance);
-        var language = SupportedLanguages.GetLanguageInfo("fr")!;
+        var language = SupportedLanguages.GetLanguageInfo("fr-FR")!;
         var tempDir = CreateTempDirectory();
         var outputPath = Path.Combine(tempDir, "french.json");
 
