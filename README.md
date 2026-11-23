@@ -230,6 +230,34 @@ Each translation file includes:
 - Metadata about the language
 - Progress reports and error logs
 
+## Line endings
+
+Translation files are always stored with LF line endings, on every platform. The manifest's hashes depend on it.
+
+If you cloned this repo before that rule was added (see `.gitattributes`), your copies may still have Windows (CRLF) line endings, and `generate-manifest` would then produce wrong hashes. Refresh them once. If you have uncommitted changes to translation files, stash them first.
+
+Run these from the repo root, not from `Translator/`.
+
+On Windows:
+
+```bash
+git stash
+del /q translations\*.json
+git checkout -- translations
+git stash pop
+```
+
+On macOS or Linux:
+
+```bash
+git stash
+rm translations/*.json
+git checkout -- translations
+git stash pop
+```
+
+Skip `git stash` and `git stash pop` if you have no local changes.
+
 ## Help us make it better
 
 All the translations are AI generated and AI can make mistakes sometimes, so if you recognize a string that might need to be edited, share a pull request. 

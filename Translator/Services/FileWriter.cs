@@ -57,7 +57,7 @@ public class FileWriter
             }
 
             // Write the file
-            var json = translationFile.ToString(Formatting.Indented);
+            var json = translationFile.ToString(Formatting.Indented).Replace("\r\n", "\n");
             await File.WriteAllTextAsync(outputPath, json);
 
             _logger.LogInformation("Successfully wrote {Count} translations to {OutputPath}", 
@@ -95,7 +95,7 @@ public class FileWriter
             }
 
             // Write the file
-            var json = translationFile.ToString(Formatting.Indented);
+            var json = translationFile.ToString(Formatting.Indented).Replace("\r\n", "\n");
             await File.WriteAllTextAsync(outputPath, json);
 
             _logger.LogInformation("Successfully wrote {Count} backend translations to {OutputPath}", 
@@ -283,7 +283,7 @@ public class FileWriter
             return raw;
 
         // For each missing key, find the existing key it should follow in canonical (writer) order.
-        const string topAnchor = " TOP";
+        const string topAnchor = " TOP";
         var perAnchor = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         var anchor = topAnchor;
         foreach (var key in existingKeys.Concat(missing).OrderBy(k => k, WriterKeyComparer))

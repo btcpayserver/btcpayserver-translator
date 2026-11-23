@@ -138,7 +138,7 @@ public class LanguagePackValidator
 
             if (fix && fileChanged)
             {
-                await File.WriteAllTextAsync(filePath, json.ToString(Formatting.Indented));
+                await File.WriteAllTextAsync(filePath, json.ToString(Formatting.Indented).Replace("\r\n", "\n"));
                 _logger.LogInformation("Fixed suspicious/mismatched entries in {FileName}", Path.GetFileName(filePath));
             }
         }
