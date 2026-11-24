@@ -224,7 +224,7 @@ public class TranslationOrchestrator
 
             // Find what's new, what's deleted, and what's unchanged
             var newKeys = sourceTranslations.Keys.Except(existingTranslations.Keys).ToList();
-            var deletedKeys = existingTranslations.Keys.Except(sourceTranslations.Keys).ToList();
+            var deletedKeys = existingTranslations.Keys.Except(sourceTranslations.Keys).Where(k => !IsMetadataKey(k)).ToList();
             var unchangedKeys = existingTranslations.Keys.Intersect(sourceTranslations.Keys).ToList();
 
             _logger.LogInformation("Analysis: {NewCount} new strings, {DeletedCount} deleted strings, {UnchangedCount} unchanged strings",
@@ -288,7 +288,7 @@ public class TranslationOrchestrator
             }
 
             // Rebuild the final dictionary in the same order as source
-            var finalTranslations = new Dictionary<string, string>();
+            var finalTranslations = existingTranslations.Where(kv => IsMetadataKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
             foreach (var sourceKey in sourceTranslations.Keys)
             {
                 if (existingTranslations.ContainsKey(sourceKey))
@@ -479,7 +479,7 @@ public class TranslationOrchestrator
             _logger.LogInformation("Loaded {Count} existing translations for {Language}", existingTranslations.Count, languageInfo.Name);
 
             var newKeys = sourceTranslations.Keys.Except(existingTranslations.Keys).ToList();
-            var deletedKeys = existingTranslations.Keys.Except(sourceTranslations.Keys).ToList();
+            var deletedKeys = existingTranslations.Keys.Except(sourceTranslations.Keys).Where(k => !IsMetadataKey(k)).ToList();
 
             _logger.LogInformation("{Language}: {NewCount} new, {DeletedCount} deleted, {UnchangedCount} unchanged",
                 languageInfo.Name, newKeys.Count, deletedKeys.Count, existingTranslations.Keys.Intersect(sourceTranslations.Keys).Count());
@@ -537,7 +537,7 @@ public class TranslationOrchestrator
                 existingTranslations.Remove(deletedKey);
             }
 
-            var finalTranslations = new Dictionary<string, string>();
+            var finalTranslations = existingTranslations.Where(kv => IsMetadataKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
             foreach (var sourceKey in sourceTranslations.Keys)
             {
                 if (existingTranslations.ContainsKey(sourceKey))
@@ -561,6 +561,9 @@ public class TranslationOrchestrator
             return false;
         }
     }
+
+    // Keys starting with "_" (like _maintainer) are notes about the pack, not BTCPay strings. Update must never delete them.
+    private static bool IsMetadataKey(string key) => key.StartsWith('_');
 
     private void LogUnsupportedLanguage(string languageCode)
     {
