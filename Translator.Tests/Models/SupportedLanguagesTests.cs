@@ -66,8 +66,8 @@ public class SupportedLanguagesTests
     {
         Assert.Equal(new[] { "fr-FR" }, SupportedLanguages.SuggestCodes("fr"));
 
-        var chinese = SupportedLanguages.SuggestCodes("zh-cn").ToList();
-        Assert.Contains("zh-SG", chinese);
+        var chinese = SupportedLanguages.SuggestCodes("zh").ToList();
+        Assert.Contains("zh-CN", chinese);
         Assert.Contains("zh-TW", chinese);
 
         Assert.Empty(SupportedLanguages.SuggestCodes("xx"));

@@ -25,7 +25,7 @@ public static class SupportedLanguages
         new LanguageInfo("ru-RU", "Russian", "Русский"),
         new LanguageInfo("ja-JP", "Japanese", "日本語"),
         new LanguageInfo("ko", "Korean", "한국어"),
-        new LanguageInfo("zh-SG", "Chinese (Simplified)", "简体中文"),
+        new LanguageInfo("zh-CN", "Chinese (Simplified)", "简体中文"),
         new LanguageInfo("zh-TW", "Chinese (Traditional)", "繁體中文"),
         new LanguageInfo("ar", "Arabic", "العربية", true),
         new LanguageInfo("he", "Hebrew", "עברית", true),
@@ -124,7 +124,7 @@ public static class SupportedLanguages
     public static IEnumerable<LanguageInfo> GetAllLanguages() => Catalogue;
 
     /// Codes in the catalogue that share the input's language subtag,
-    /// e.g. "fr" -> fr-FR, "zh-cn" -> zh-SG, zh-TW. Used for error messages only.
+    /// e.g. "fr" -> fr-FR, "zh" -> zh-CN, zh-TW. Used for error messages only.
     public static IEnumerable<string> SuggestCodes(string input)
     {
         if (string.IsNullOrWhiteSpace(input)) return [];
