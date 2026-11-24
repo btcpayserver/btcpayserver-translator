@@ -227,6 +227,104 @@ public class TranslationOrchestratorTests
     }
 
     [Fact]
+    public async Task UpdateLanguageAsync_KeepsMaintainer()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
+            var fakeService = new FakeTranslationService(r => new TranslationResponse(r.Key, $"upd-{r.SourceText}", true));
+            var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
+            var language = SupportedLanguages.GetLanguageInfo("fr-FR")!;
+            var outputPath = Path.Combine(tempDir, $"{language.Name.ToLower()}.json");
+
+            await fileWriter.WriteBackendTranslationFileAsync(
+                outputPath,
+                language,
+                new Dictionary<string, string>
+                {
+                    ["_maintainer"] = "alice|https://github.com/alice",
+                    ["hello"] = "bonjour"
+                });
+
+            var orchestrator = CreateOrchestrator(
+                extractor,
+                fileWriter,
+                fakeService,
+                new Dictionary<string, string?>
+                {
+                    ["Translation:OutputDirectory"] = tempDir,
+                    ["Translation:InputFile"] = inputFile,
+                    ["Translation:BatchSize"] = "10",
+                    ["Translation:DelayBetweenRequests"] = "0"
+                });
+
+            var success = await orchestrator.UpdateLanguageAsync("fr-FR");
+
+            Assert.True(success);
+            var written = await fileWriter.LoadExistingBackendTranslationsAsync(outputPath);
+            Assert.Equal("alice|https://github.com/alice", written["_maintainer"]);
+            Assert.Equal("bonjour", written["hello"]);
+            Assert.Equal("upd-bye", written["bye"]);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task UpdateAllLanguagesAsync_KeepsMaintainer()
+    {
+        var tempDir = CreateTempDirectory();
+        try
+        {
+            var (extractor, inputFile) = CreateExtractorFromKnownTranslationsFile(tempDir);
+            var fakeService = new FakeTranslationService(r => new TranslationResponse(r.Key, $"all-{r.SourceText}", true));
+            var fileWriter = new FileWriter(NullLogger<FileWriter>.Instance);
+            var frenchPath = Path.Combine(tempDir, "french.json");
+
+            await fileWriter.WriteBackendTranslationFileAsync(
+                frenchPath,
+                SupportedLanguages.GetLanguageInfo("fr-FR")!,
+                new Dictionary<string, string>
+                {
+                    ["_maintainer"] = "alice|https://github.com/alice",
+                    ["hello"] = "bonjour"
+                });
+
+            var orchestrator = CreateOrchestrator(
+                extractor,
+                fileWriter,
+                fakeService,
+                new Dictionary<string, string?>
+                {
+                    ["Translation:OutputDirectory"] = tempDir,
+                    ["Translation:InputFile"] = inputFile,
+                    ["Translation:BatchSize"] = "10",
+                    ["Translation:DelayBetweenRequests"] = "0"
+                });
+
+            var results = await orchestrator.UpdateAllLanguagesAsync();
+
+            Assert.True(results["fr-FR"]);
+            var written = await fileWriter.LoadExistingBackendTranslationsAsync(frenchPath);
+            Assert.Equal("alice|https://github.com/alice", written["_maintainer"]);
+            Assert.Equal("all-bye", written["bye"]);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public async Task UpdateAllLanguagesAsync_UpdatesOnlyKnownLanguageFiles()
     {
         var tempDir = CreateTempDirectory();
