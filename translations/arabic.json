@@ -2325,6 +2325,7 @@
   "There is no pending invitation for this user.": "لا توجد دعوة معلقة لهذا المستخدم.",
   "There isn't any UTXO available to bump fee with CPFP": "لا يوجد أي UTXO متاح لزيادة الرسوم مع CPFP",
   "There was an error generating your wallet: {0}": "حدث خطأ أثناء إنشاء محفظتك: {0}",
+  "This LND endpoint is available but not exposed by the BTCPay Server Docker reverse proxy. <a href=\"https://docs.btcpayserver.org/Docker/networking/#expose-bitcoin-lnd-apis\" target=\"_blank\" rel=\"noreferrer noopener\">Learn how to enable it</a>.": "نقطة نهاية LND هذه متاحة ولكنها غير مكشوفة بواسطة الوكيل العكسي لـ Docker الخاص بـ BTCPay Server. <a href=\"https://docs.btcpayserver.org/Docker/networking/#expose-bitcoin-lnd-apis\" target=\"_blank\" rel=\"noreferrer noopener\">تعلم كيفية تمكينها</a>.",
   "This Lightning Address will be removed.": "سيتم إزالة عنوان لايتنينج هذا.",
   "This QR Code is only valid for 10 minutes": "رمز QR هذا صالح لمدة 10 دقائق فقط",
   "This account has been locked out. Please try again": "تم قفل هذا الحساب مؤقتًا. يرجى المحاولة مرة أخرى",
