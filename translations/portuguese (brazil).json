@@ -2697,6 +2697,7 @@
   "Would you like to upgrade <span class=\"subscriber-name fw-semibold\"></span> to <b class=\"changePlanName\"></b>?": "Você gostaria de atualizar <span class=\"subscriber-name fw-semibold\"></span> para <b class=\"changePlanName\"></b>?",
   "Yes": "Sim",
   "Yesterday": "Ontem",
+  "You": "Você",
   "You access will be revoked in {0}": "Seu acesso será revogado em {0}",
   "You access will be revoked in {0}, you need to subscribe to a new plan.": "Seu acesso será revogado em {0}, você precisa assinar um novo plano.",
   "You are in trial": "Você está em período de teste",
